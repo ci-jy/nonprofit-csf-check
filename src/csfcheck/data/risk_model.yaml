@@ -1,0 +1,84 @@
+# Inherent likelihood and impact (1-5) of a weakness in each CSF category for
+# a small non-profit, and the cost band of closing it. These are my own
+# judgements, informed by the threats small charities actually report
+# (phishing, account takeover, lost devices, ransomware, payment fraud); they
+# are deliberately coarse. Profile modifiers below raise them where the
+# organisation's own situation makes a category matter more.
+
+cost_bands:
+  free:   {weight: 1, label: "Free (time only)"}
+  low:    {weight: 2, label: "Low (under ~$500 a year)"}
+  medium: {weight: 3, label: "Medium (~$500-$5,000)"}
+  high:   {weight: 5, label: "High (over ~$5,000 or a managed service)"}
+
+categories:
+  GV.OC: {likelihood: 2, impact: 3, cost: free}
+  GV.RM: {likelihood: 2, impact: 3, cost: free}
+  GV.RR: {likelihood: 3, impact: 3, cost: free}
+  GV.PO: {likelihood: 3, impact: 3, cost: free}
+  GV.OV: {likelihood: 2, impact: 2, cost: free}
+  GV.SC: {likelihood: 3, impact: 3, cost: free}
+  ID.AM: {likelihood: 3, impact: 3, cost: free}
+  ID.RA: {likelihood: 3, impact: 3, cost: free}
+  ID.IM: {likelihood: 2, impact: 3, cost: free}
+  PR.AA: {likelihood: 4, impact: 4, cost: low}
+  PR.AT: {likelihood: 4, impact: 3, cost: free}
+  PR.DS: {likelihood: 3, impact: 4, cost: low}
+  PR.PS: {likelihood: 4, impact: 3, cost: low}
+  PR.IR: {likelihood: 3, impact: 3, cost: medium}
+  DE.CM: {likelihood: 3, impact: 3, cost: low}
+  DE.AE: {likelihood: 3, impact: 3, cost: free}
+  RS.MA: {likelihood: 3, impact: 4, cost: free}
+  RS.AN: {likelihood: 2, impact: 3, cost: free}
+  RS.CO: {likelihood: 3, impact: 4, cost: free}
+  RS.MI: {likelihood: 3, impact: 4, cost: free}
+  RC.RP: {likelihood: 3, impact: 4, cost: free}
+  RC.CO: {likelihood: 2, impact: 3, cost: free}
+
+# Subcategories whose cost differs from their category's.
+cost_overrides:
+  PR.AA-03: low       # MFA is free on most services, but password managers cost a little
+  PR.AA-06: low
+  PR.DS-11: low
+  PR.IR-01: low
+  PR.IR-02: low
+  PR.IR-04: medium
+  PR.PS-01: free
+  PR.PS-02: free
+  PR.PS-04: low
+  PR.PS-06: medium
+  DE.CM-01: high
+  DE.CM-02: medium
+  DE.CM-03: low
+  DE.CM-09: free      # built-in anti-malware (e.g. Microsoft Defender) is enough
+  ID.IM-02: low
+  ID.RA-01: low
+  GV.RM-04: medium    # cyber insurance premium
+  RS.AN-07: low
+
+# Added to a category's likelihood or impact when the profile flag is set
+# (results are capped at 5).
+modifiers:
+  remote_staff:
+    likelihood: {PR.AA: 1, PR.IR: 1, PR.DS: 1}
+  takes_payments:
+    likelihood: {PR.AA: 1, DE.CM: 1}
+    impact: {PR.DS: 1, RS.CO: 1}
+  holds_donor_data:
+    impact: {PR.DS: 1, ID.AM: 1, RS.CO: 1}
+  holds_client_data:
+    impact: {PR.DS: 1, PR.AA: 1, GV.OC: 1}
+  has_servers:
+    likelihood: {PR.PS: 1}
+    impact: {PR.IR: 1, RC.RP: 1}
+  uses_it_provider:
+    likelihood: {GV.SC: 1}
+  develops_software:
+    likelihood: {ID.RA: 1}
+
+# Risk score = likelihood x impact (1-25)
+ratings:
+  - {max: 4, label: Low}
+  - {max: 9, label: Medium}
+  - {max: 15, label: High}
+  - {max: 25, label: Critical}

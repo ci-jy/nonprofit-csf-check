@@ -1,0 +1,60 @@
+# Target priorities taken from NIST SP 1300, "NIST Cybersecurity Framework 2.0:
+# Small Business Quick-Start Guide" (https://doi.org/10.6028/NIST.SP.1300).
+# Each entry is one "Action to Consider" and the CSF references the guide
+# prints next to it. A reference to a whole category (e.g. RS.MI) counts for
+# every subcategory in it, but at a lower target than a named subcategory.
+# The guide prints "GV.0C-04" with a zero; it is recorded here as GV.OC-04.
+
+source: NIST SP 1300, CSF 2.0 Small Business Quick-Start Guide
+targets:
+  cited: 3          # subcategory named directly by an action
+  category: 2       # subcategory inside a category the guide names
+  baseline: 1       # everything else: at least done informally
+
+actions:
+  - {function: GV, step: Understand, refs: [GV.OC-01], text: "Understand how cybersecurity risks can disrupt achievement of your mission."}
+  - {function: GV, step: Understand, refs: [GV.OC-03], text: "Understand your legal, regulatory, and contractual cybersecurity requirements."}
+  - {function: GV, step: Understand, refs: [GV.RR-02], text: "Understand who will be responsible for developing and executing the cybersecurity strategy."}
+  - {function: GV, step: Assess, refs: [GV.OC-04], text: "Assess the potential impact of a total or partial loss of critical assets and operations."}
+  - {function: GV, step: Assess, refs: [GV.RM-04], text: "Assess whether cybersecurity insurance is appropriate for your organisation."}
+  - {function: GV, step: Assess, refs: [GV.SC-06], text: "Assess cybersecurity risks posed by suppliers and other third parties before entering into formal relationships."}
+  - {function: GV, step: Prioritize, refs: [GV.RM-03], text: "Prioritize managing cybersecurity risks alongside other organisational risks."}
+  - {function: GV, step: Communicate, refs: [GV.RR-01], text: "Communicate leadership's support of a risk-aware, ethical, and continually improving culture."}
+  - {function: GV, step: Communicate, refs: [GV.PO-01], text: "Communicate, enforce, and maintain policies for managing cybersecurity risks."}
+
+  - {function: ID, step: Understand, refs: [ID.AM-01, ID.AM-02, ID.AM-04], text: "Understand what assets you rely on by keeping an inventory of hardware, software, systems, and services."}
+  - {function: ID, step: Assess, refs: [ID.RA-01], text: "Assess your assets (IT and physical) for potential vulnerabilities."}
+  - {function: ID, step: Assess, refs: [ID.IM-01], text: "Assess the effectiveness of your cybersecurity program to identify areas that need improvement."}
+  - {function: ID, step: Prioritize, refs: [ID.AM-07], text: "Prioritize inventorying and classifying your data."}
+  - {function: ID, step: Prioritize, refs: [ID.RA], text: "Prioritize documenting internal and external cybersecurity threats and responses using a risk register."}
+  - {function: ID, step: Communicate, refs: [ID.IM-04], text: "Communicate cybersecurity plans, policies, and best practices to all staff and relevant third parties."}
+  - {function: ID, step: Communicate, refs: [ID.IM], text: "Communicate to staff the importance of identifying needed improvements."}
+
+  - {function: PR, step: Understand, refs: [PR.AA-05], text: "Restrict sensitive information to only the people who need it to do their jobs."}
+  - {function: PR, step: Assess, refs: [PR.AT-01, PR.AT-02], text: "Assess the timeliness, quality, and frequency of cybersecurity training."}
+  - {function: PR, step: Prioritize, refs: [PR.AA-03], text: "Require multi-factor authentication on all accounts that offer it and consider password managers."}
+  - {function: PR, step: Prioritize, refs: [PR.AA-01], text: "Change default manufacturer passwords."}
+  - {function: PR, step: Prioritize, refs: [PR.PS-02], text: "Regularly update and patch software and operating systems; enable automatic updates."}
+  - {function: PR, step: Prioritize, refs: [PR.DS-11], text: "Regularly back up your data and test your backups."}
+  - {function: PR, step: Prioritize, refs: [PR.DS-01], text: "Turn on full-disk encryption on laptops and tablets."}
+  - {function: PR, step: Communicate, refs: [PR.AT-01, PR.AT-02], text: "Teach staff to recognise common attacks, report suspicious activity, and perform basic cyber hygiene."}
+
+  - {function: DE, step: Understand, refs: [DE.CM], text: "Understand how to identify common indicators of a cybersecurity incident."}
+  - {function: DE, step: Assess, refs: [DE.CM-06, DE.CM-09], text: "Assess your technologies and external services for deviations from expected behaviour."}
+  - {function: DE, step: Assess, refs: [DE.CM-02], text: "Assess your physical environment for signs of tampering or suspicious activity."}
+  - {function: DE, step: Prioritize, refs: [DE.CM-09], text: "Install and maintain anti-malware software on all devices."}
+  - {function: DE, step: Prioritize, refs: [DE.CM], text: "Engage a service provider to monitor for suspicious activity if you can't do it yourself."}
+  - {function: DE, step: Communicate, refs: [DE.AE-06, DE.AE-07], text: "Share the relevant details of an incident with your authorised incident responder."}
+
+  - {function: RS, step: Understand, refs: [RS.MA-01], text: "Understand your incident response plan and who has authority to carry it out."}
+  - {function: RS, step: Assess, refs: [RS.MA-01], text: "Assess your ability to respond to a cybersecurity incident."}
+  - {function: RS, step: Assess, refs: [RS.AN-03, RS.MA-03], text: "Assess an incident's severity, what happened, and its root cause."}
+  - {function: RS, step: Prioritize, refs: [RS.MI], text: "Contain and eradicate an incident to prevent further damage."}
+  - {function: RS, step: Communicate, refs: [RS.CO-02, RS.CO-03], text: "Tell internal and external stakeholders about a confirmed incident as laws, contracts and policies require."}
+
+  - {function: RC, step: Understand, refs: [RC.RP-01], text: "Understand who inside and outside the organisation has recovery responsibilities."}
+  - {function: RC, step: Assess, refs: [RC.RP-06], text: "Prepare an after-action report covering the incident, the response, and lessons learned."}
+  - {function: RC, step: Assess, refs: [RC.RP-03], text: "Check the integrity of backed-up data before restoring from it."}
+  - {function: RC, step: Prioritize, refs: [RC.RP-02], text: "Prioritize recovery actions by organisational needs, resources, and the assets affected."}
+  - {function: RC, step: Communicate, refs: [RC.CO], text: "Communicate regularly and securely with internal and external stakeholders."}
+  - {function: RC, step: Communicate, refs: [RC.RP-06], text: "Document completion of the incident and the return to normal activities."}
