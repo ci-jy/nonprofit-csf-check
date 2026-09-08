@@ -1,0 +1,504 @@
+# Question bank for the self-assessment.
+#
+# Every question is written for someone who is not an IT person and maps to
+# one or more CSF 2.0 subcategories (`maps`). Two kinds of branching:
+#
+#   when:     a condition on the organisation profile, e.g.
+#             "has_office or has_servers". If it is false the question is
+#             never asked and does not count towards any score.
+#   requires: a follow-up that is only asked once an earlier question scored
+#             at least `min_score`. When the earlier answer is lower the
+#             follow-up is skipped and scores 0, because it cannot be in
+#             place either (no backups means no tested backups).
+#
+# `exclusions` state when a subcategory does not apply at all. The bank is
+# checked at startup over every combination of profile flags: each
+# subcategory must be asked about or excluded, never both and never neither.
+
+version: 1
+
+profile_flags:
+  has_office: "You have premises (an office, warehouse, studio or hall) where your equipment is kept."
+  has_servers: "You run your own server or network storage box (NAS) rather than only cloud services."
+  uses_cloud_email: "Email and files are on Microsoft 365 or Google Workspace with an admin console."
+  takes_payments: "You take card payments or online donations, or pay suppliers by bank transfer online."
+  remote_staff: "Staff or volunteers work from home or use their own phones and laptops."
+  holds_donor_data: "You keep records of donors or members (names, addresses, giving history)."
+  holds_client_data: "You keep sensitive information about the people you serve (health, family, housing)."
+  has_employees: "You have paid staff, not only volunteers."
+  uses_it_provider: "An outside IT company or freelancer looks after some of your systems."
+  develops_software: "You write or maintain your own website code, app or plugins."
+
+answer_sets:
+  maturity:
+    - {value: "no", label: "No, or not sure", score: 0}
+    - {value: informal, label: "Sometimes, depends on one person remembering", score: 1}
+    - {value: mostly, label: "Mostly, but not written down or not checked", score: 2}
+    - {value: "yes", label: "Yes, written down and checked at least once a year", score: 3}
+  yesno:
+    - {value: "no", label: "No, or not sure", score: 0}
+    - {value: "yes", label: "Yes", score: 3}
+
+exclusions:
+  - subcategories: [PR.PS-06, ID.RA-08]
+    when: "not develops_software"
+    reason: "You do not write software, so secure development and vulnerability disclosure handling do not apply."
+  - subcategories: [PR.AA-06, PR.IR-02, DE.CM-02, DE.CM-01]
+    when: "not has_office and not has_servers"
+    reason: "With no premises or own servers there is no physical site or local network of your own to protect or watch."
+  - subcategories: [PR.AA-04]
+    when: "not uses_cloud_email"
+    reason: "Without a central Microsoft or Google account there is no single sign-on service passing identity assertions."
+  - subcategories: [PR.PS-04]
+    when: "not uses_cloud_email and not has_servers"
+    reason: "You have no admin console or server of your own that could produce security logs."
+  - subcategories: [GV.RR-04]
+    when: "not has_employees"
+    reason: "With volunteers only there are no HR practices to build security into; joiner and leaver steps are covered under access control."
+
+questions:
+  # ---------------------------------------------------------------- Govern
+  - id: gv-mission
+    section: Govern
+    text: "Have you worked out which of your services would stop if your computers, email or data were unavailable for a week?"
+    maps: [GV.OC-01, GV.OC-04]
+  - id: gv-dependencies
+    section: Govern
+    text: "Do you know which outside services you cannot operate without (email provider, donation platform, bank, IT helper), and who holds the logins?"
+    maps: [GV.OC-05, GV.SC-04, ID.AM-04]
+  - id: gv-stakeholders
+    section: Govern
+    text: "Do you know what your board, funders and the people you serve expect from you about protecting their information?"
+    maps: [GV.OC-02]
+  - id: gv-legal
+    section: Govern
+    text: "Do you know which data protection laws, funder conditions and contracts apply to the information you hold?"
+    maps: [GV.OC-03]
+  - id: gv-owner
+    section: Govern
+    text: "Is one named person responsible for cybersecurity, even if they are part-time or a volunteer?"
+    answers: yesno
+    maps: [GV.RR-02]
+  - id: gv-leadership
+    section: Govern
+    text: "Does your director or board talk about cybersecurity at least once a year and back the person responsible?"
+    maps: [GV.RR-01]
+  - id: gv-resources
+    section: Govern
+    text: "Is there some budget or donated time set aside for IT security (licences, training, an IT helper)?"
+    maps: [GV.RR-03]
+  - id: gv-hr
+    section: Govern
+    when: "has_employees"
+    text: "Do hiring and leaving include security steps: confidentiality terms, security duties in job descriptions, return of equipment?"
+    maps: [GV.RR-04]
+  - id: gv-policy
+    section: Govern
+    text: "Do you have a written IT or acceptable-use policy that staff and volunteers have read?"
+    maps: [GV.PO-01]
+  - id: gv-policy-review
+    section: Govern
+    requires: {question: gv-policy, min_score: 1}
+    text: "Is that policy updated when things change (new systems, new laws) and are people reminded of it?"
+    maps: [GV.PO-02]
+  - id: gv-risk-register
+    section: Govern
+    text: "Do you keep a simple list of cyber risks: what could go wrong, how likely it is and how bad it would be?"
+    maps: [GV.RM-06, ID.RA-03, ID.RA-04, ID.RA-05]
+  - id: gv-risk-appetite
+    section: Govern
+    text: "Has the board agreed what you want security to achieve and how much risk is acceptable?"
+    maps: [GV.RM-01, GV.RM-02]
+  - id: gv-erm
+    section: Govern
+    text: "Are cyber risks part of the organisation's general risk register or regular reports to the board?"
+    maps: [GV.RM-03]
+  - id: gv-insurance
+    section: Govern
+    text: "Have you decided how to handle risks you cannot fix yourselves, for example by checking whether insurance covers a cyber incident?"
+    maps: [GV.RM-04]
+  - id: gv-speak-up
+    section: Govern
+    text: "Do staff and volunteers know who to tell about a security worry, including a problem with a supplier?"
+    maps: [GV.RM-05]
+  - id: gv-opportunities
+    section: Govern
+    text: "When choosing new technology, do you also look for security gains it could bring (better backups, built-in MFA)?"
+    maps: [GV.RM-07]
+  - id: gv-review
+    section: Govern
+    text: "At least once a year, do you look back at whether your security measures are working and adjust them?"
+    maps: [GV.OV-01, GV.OV-02, GV.OV-03]
+  - id: sc-approach
+    section: Govern
+    text: "Do you have an agreed way of judging the security of suppliers (IT helper, cloud apps, donation platform) as part of managing risk?"
+    maps: [GV.SC-01, GV.SC-03, GV.SC-09]
+  - id: sc-contracts
+    section: Govern
+    requires: {question: sc-approach, min_score: 1}
+    text: "Are suppliers' security duties written into the contracts or terms you have checked (who does backups, who patches, breach notice)?"
+    maps: [GV.SC-02, GV.SC-05]
+  - id: sc-due-diligence
+    section: Govern
+    text: "Before signing up to a new service that will hold your data, does someone check its security (MFA, where data is kept, reputation)?"
+    maps: [GV.SC-06, GV.SC-07, ID.RA-10]
+  - id: sc-incidents
+    section: Govern
+    text: "Do you know how to reach key suppliers in an emergency, and are they part of your incident plans?"
+    maps: [GV.SC-08]
+  - id: sc-exit
+    section: Govern
+    text: "When you stop using a supplier or app, do you get your data back, have it deleted and close the accounts?"
+    maps: [GV.SC-10]
+  - id: it-provider-oversight
+    section: Govern
+    when: "uses_it_provider"
+    text: "Do you know what access your IT provider has, and do they report to you what they changed or found?"
+    maps: [GV.SC-07, DE.CM-06]
+
+  # -------------------------------------------------------------- Identify
+  - id: id-hardware
+    section: Identify
+    text: "Do you keep a list of the organisation's devices (laptops, phones, routers, printers) and who has each one?"
+    maps: [ID.AM-01]
+  - id: id-software
+    section: Identify
+    text: "Do you keep a list of the software, apps and online accounts the organisation uses?"
+    maps: [ID.AM-02]
+  - id: id-data-flows
+    section: Identify
+    text: "Could you sketch where your data goes: which services hold copies and which devices connect to them?"
+    maps: [ID.AM-03]
+  - id: id-data
+    section: Identify
+    text: "Do you know what personal or sensitive data you hold, where it is kept, and which of it matters most?"
+    maps: [ID.AM-07, ID.AM-05]
+  - id: id-lifecycle
+    section: Identify
+    text: "Are devices wiped before they are sold, recycled or given away, and replaced before they become unsafe?"
+    maps: [ID.AM-08, PR.PS-03]
+  - id: id-vulnerabilities
+    section: Identify
+    text: "Does someone check for known weaknesses: out-of-date software, unsupported Windows versions, default router settings?"
+    maps: [ID.RA-01]
+  - id: id-threat-intel
+    section: Identify
+    text: "Do you get security alerts or advice from a trusted source (national cyber centre, sector body, your IT provider)?"
+    maps: [ID.RA-02, DE.AE-07]
+  - id: id-risk-plan
+    section: Identify
+    requires: {question: gv-risk-register, min_score: 1}
+    text: "For the risks on your list, is there a plan saying what you will do, who does it and by when?"
+    maps: [ID.RA-06]
+  - id: id-change
+    section: Identify
+    text: "Are big IT changes (new system, new supplier, changed settings) thought through and recorded before they happen?"
+    maps: [ID.RA-07]
+  - id: id-vuln-reports
+    section: Identify
+    when: "develops_software"
+    text: "If someone reports a security flaw in your website or app, is there a published contact and a way to act on it?"
+    maps: [ID.RA-08]
+  - id: id-sources
+    section: Identify
+    text: "Do you buy devices and software only from reputable sources (no cracked software, no unchecked second-hand kit)?"
+    maps: [ID.RA-09]
+  - id: id-improve
+    section: Identify
+    text: "After a scare, a near miss or an audit, do you write down what to improve and follow it up?"
+    maps: [ID.IM-01, ID.IM-03]
+  - id: id-exercise
+    section: Identify
+    text: "Have you ever tested your plans, for example a phishing test or a 'what if we got ransomware' table-top exercise?"
+    maps: [ID.IM-02]
+  - id: id-ir-plan
+    section: Identify
+    text: "Do you have a written incident response plan (who to call, what to do first) that staff and volunteers know about?"
+    maps: [ID.IM-04, RS.MA-01]
+
+  # --------------------------------------------------------------- Protect
+  - id: pr-own-accounts
+    section: Protect
+    text: "Does everyone have their own login (no shared accounts), and have default passwords on routers and devices been changed?"
+    maps: [PR.AA-01]
+  - id: pr-identity-checks
+    section: Protect
+    text: "Before creating an account or resetting a password, do you confirm who is asking (not just trusting an email)?"
+    maps: [PR.AA-02]
+  - id: pr-mfa
+    section: Protect
+    text: "Is multi-factor authentication (a code or app prompt) turned on for email, banking and any donor or client systems?"
+    maps: [PR.AA-03]
+  - id: pr-passwords
+    section: Protect
+    text: "Do people use a password manager or otherwise keep a different strong password for every account?"
+    maps: [PR.AA-03]
+  - id: pr-sso
+    section: Protect
+    when: "uses_cloud_email"
+    text: "Do other apps sign in through your Microsoft or Google account (single sign-on), with its sign-in settings reviewed?"
+    maps: [PR.AA-04]
+  - id: pr-least-access
+    section: Protect
+    text: "Does each person only have access to the files and systems they need, and is access removed promptly when they leave?"
+    maps: [PR.AA-05]
+  - id: pr-admin-rights
+    section: Protect
+    text: "Are administrator rights on computers and cloud accounts limited to one or two people?"
+    maps: [PR.AA-05]
+  - id: pr-physical
+    section: Protect
+    when: "has_office or has_servers"
+    text: "Are your premises and equipment locked, with keys or door codes managed and visitors supervised?"
+    maps: [PR.AA-06]
+  - id: pr-training
+    section: Protect
+    text: "Do staff and volunteers get basic security training (phishing, passwords, how to report) at least once a year?"
+    maps: [PR.AT-01]
+  - id: pr-role-training
+    section: Protect
+    text: "Do the people who run IT, finance or donor records get extra training for the risks of their role?"
+    maps: [PR.AT-02]
+  - id: pr-encryption
+    section: Protect
+    text: "Are laptops and phones encrypted and locked with a PIN or password (BitLocker, FileVault, phone passcode)?"
+    maps: [PR.DS-01]
+  - id: pr-in-transit
+    section: Protect
+    text: "Is data sent securely: website on HTTPS, sensitive files shared by secure link rather than as plain email attachments?"
+    maps: [PR.DS-02]
+  - id: pr-in-use
+    section: Protect
+    text: "Do people lock their screens when they step away and avoid working on sensitive data where others can see it?"
+    maps: [PR.DS-10]
+  - id: pr-backup
+    section: Protect
+    text: "Are important files and databases backed up automatically, with a copy kept separate from the main system?"
+    maps: [PR.DS-11]
+  - id: pr-backup-test
+    section: Protect
+    requires: {question: pr-backup, min_score: 1}
+    text: "Have you test-restored something from backup in the last year to prove it works?"
+    maps: [PR.DS-11, RC.RP-03]
+  - id: pr-sharing
+    section: Protect
+    text: "Are shared folders and links restricted, so sensitive files are not open to 'anyone with the link'?"
+    maps: [PR.IR-01]
+  - id: pr-network
+    section: Protect
+    when: "has_office or has_servers"
+    text: "Is your office Wi-Fi protected with a strong password, with a separate guest network and the router firewall on?"
+    maps: [PR.IR-01]
+  - id: pr-environment
+    section: Protect
+    when: "has_office or has_servers"
+    text: "Is equipment protected from power cuts, water and heat (surge protector or UPS, nothing on the floor of a damp room)?"
+    maps: [PR.IR-02]
+  - id: pr-continuity
+    section: Protect
+    text: "If your main laptop, premises or internet connection were lost, could you keep essential services running?"
+    maps: [PR.IR-03]
+  - id: pr-capacity
+    section: Protect
+    text: "Does someone watch storage space, licences and internet capacity so systems do not run out?"
+    maps: [PR.IR-04]
+  - id: pr-secure-setup
+    section: Protect
+    text: "Are new devices set up the same secure way every time (firewall on, auto-lock, unneeded software removed)?"
+    maps: [PR.PS-01]
+  - id: pr-updates
+    section: Protect
+    text: "Are automatic updates turned on for operating systems, browsers and apps?"
+    maps: [PR.PS-02]
+  - id: pr-unsupported
+    section: Protect
+    text: "Have you replaced devices and software that no longer receive security updates?"
+    maps: [PR.PS-02, PR.PS-03]
+  - id: pr-logs
+    section: Protect
+    when: "uses_cloud_email or has_servers"
+    text: "Is sign-in and audit logging turned on in your admin console or servers, and kept for at least 90 days?"
+    maps: [PR.PS-04]
+  - id: pr-software-control
+    section: Protect
+    text: "Are ordinary users prevented from installing whatever software they like on organisation devices?"
+    maps: [PR.PS-05]
+  - id: pr-secure-dev
+    section: Protect
+    when: "develops_software"
+    text: "When you change your website or app code, is it reviewed, kept up to date and checked for known flaws?"
+    maps: [PR.PS-06]
+  - id: remote-devices
+    section: Protect
+    when: "remote_staff"
+    text: "Do people working from home or on their own devices follow basic rules: passcode, updates, no shared family logins?"
+    maps: [PR.IR-01, PR.DS-10]
+  - id: remote-lost-device
+    section: Protect
+    when: "remote_staff"
+    text: "If a personal phone or laptop with organisation data is lost or its owner leaves, can you remove that data or access?"
+    maps: [PR.DS-01, PR.AA-05]
+  - id: payments-provider
+    section: Protect
+    when: "takes_payments"
+    text: "Do you take card payments only through a PCI-compliant provider (e.g. Stripe, PayPal, a card terminal), never storing card numbers yourselves?"
+    answers: yesno
+    maps: [PR.DS-01, PR.DS-02]
+  - id: payments-bank-changes
+    section: Protect
+    when: "takes_payments"
+    text: "Are requests to change a payee's bank details confirmed by phone on a known number before any money is sent?"
+    maps: [PR.AA-02]
+  - id: payments-review
+    section: Detect
+    when: "takes_payments"
+    text: "Does someone regularly check donation and payment records for odd transactions, refunds or test payments?"
+    maps: [DE.CM-03, DE.AE-02]
+  - id: donor-access
+    section: Protect
+    when: "holds_donor_data"
+    text: "Is access to the donor or member database limited to named people, with bulk exports controlled?"
+    maps: [PR.AA-05, PR.DS-01]
+  - id: donor-retention
+    section: Identify
+    when: "holds_donor_data"
+    text: "Do you delete donor or member records you no longer need, following a written retention period?"
+    maps: [ID.AM-08]
+  - id: client-data
+    section: Protect
+    when: "holds_client_data"
+    text: "Is sensitive information about the people you serve kept apart from general files, with stricter access?"
+    maps: [PR.DS-01, ID.AM-05]
+  - id: cloud-email-filtering
+    section: Detect
+    when: "uses_cloud_email"
+    text: "Is phishing and malware filtering on for email, and are SPF, DKIM and DMARC set up for your domain?"
+    maps: [DE.CM-09, PR.PS-01]
+  - id: cloud-admin-alerts
+    section: Detect
+    when: "uses_cloud_email"
+    text: "Are security defaults and alert emails switched on in your Microsoft 365 or Google Workspace admin console?"
+    maps: [DE.AE-06, DE.CM-03]
+  - id: server-maintenance
+    section: Protect
+    when: "has_servers"
+    text: "Are your server or NAS updated, with remote admin access switched off or restricted?"
+    maps: [PR.PS-02, PR.AA-05]
+  - id: server-health
+    section: Detect
+    when: "has_servers"
+    text: "Is the server or NAS checked for disk health, free space and failed backups?"
+    maps: [PR.IR-04, DE.CM-09]
+
+  # ---------------------------------------------------------------- Detect
+  - id: de-antimalware
+    section: Detect
+    text: "Is anti-malware (e.g. Microsoft Defender) running on every computer, with someone who sees its warnings?"
+    maps: [DE.CM-09]
+  - id: de-network
+    section: Detect
+    when: "has_office or has_servers"
+    text: "Does anything watch your network for unusual activity (router alerts, a managed firewall, your IT provider)?"
+    maps: [DE.CM-01]
+  - id: de-physical
+    section: Detect
+    when: "has_office or has_servers"
+    text: "Would you notice a break-in or tampering with equipment (alarm, camera, a regular check)?"
+    maps: [DE.CM-02]
+  - id: de-account-activity
+    section: Detect
+    text: "Would you notice unusual account activity, such as sign-ins from abroad, new mail-forwarding rules or mass downloads?"
+    maps: [DE.CM-03]
+  - id: de-services
+    section: Detect
+    text: "Do you read the security notices your online services send, and act on warnings about your accounts?"
+    maps: [DE.CM-06]
+  - id: de-triage
+    section: Detect
+    text: "When someone reports something odd (a strange email, a pop-up, a locked account), does someone look into what happened?"
+    maps: [DE.AE-02]
+  - id: de-correlate
+    section: Detect
+    requires: {question: de-triage, min_score: 1}
+    text: "Does that person check more than one place (email, anti-malware, bank, the supplier) to piece events together?"
+    maps: [DE.AE-03]
+  - id: de-scope
+    section: Detect
+    requires: {question: de-triage, min_score: 1}
+    text: "Do they work out how serious it is: which data, accounts and services could be affected?"
+    maps: [DE.AE-04]
+  - id: de-alerts
+    section: Detect
+    text: "Do security alerts go to a person (or your IT provider) who will act on them, not an unread inbox?"
+    maps: [DE.AE-06]
+  - id: de-declare
+    section: Detect
+    text: "Is there a clear rule for when a problem counts as an incident and the response plan starts?"
+    maps: [DE.AE-08]
+
+  # --------------------------------------------------------------- Respond
+  - id: rs-authority
+    section: Respond
+    requires: {question: id-ir-plan, min_score: 1}
+    text: "Does the plan say who makes decisions in an incident and who calls outside help (IT provider, insurer, police)?"
+    maps: [RS.MA-01, RS.MA-04]
+  - id: rs-triage
+    section: Respond
+    text: "When an incident is reported, does someone confirm it is real and decide how urgent it is?"
+    maps: [RS.MA-02, RS.MA-03]
+  - id: rs-escalate
+    section: Respond
+    text: "Do people know when to escalate a problem to the director, the board, your insurer or the police?"
+    maps: [RS.MA-04]
+  - id: rs-recovery-trigger
+    section: Respond
+    requires: {question: id-ir-plan, min_score: 1}
+    text: "Does the plan say when to stop containing an incident and start restoring systems?"
+    maps: [RS.MA-05]
+  - id: rs-contain
+    section: Respond
+    text: "Do you know how to contain an incident quickly: disconnect a device, reset passwords, suspend an account, remove the cause?"
+    maps: [RS.MI-01, RS.MI-02]
+  - id: rs-investigate
+    section: Respond
+    text: "After an incident, do you find out what happened, how far it spread and the root cause (alone or with help)?"
+    maps: [RS.AN-03, RS.AN-08]
+  - id: rs-evidence
+    section: Respond
+    text: "During an incident, would someone keep notes of what was done and preserve evidence (not wipe the laptop straight away)?"
+    maps: [RS.AN-06, RS.AN-07]
+  - id: rs-notify
+    section: Respond
+    text: "Do you know who you must tell after a data breach (regulator, donors, funders, clients) and how quickly?"
+    maps: [RS.CO-02, RS.CO-03]
+
+  # --------------------------------------------------------------- Recover
+  - id: rc-roles
+    section: Recover
+    text: "Do you know who inside and outside the organisation is responsible for restoring systems after an incident?"
+    maps: [RC.RP-01]
+  - id: rc-priorities
+    section: Recover
+    text: "Have you decided which systems and data to restore first, and how to keep essential services going meanwhile?"
+    maps: [RC.RP-02, RC.RP-04]
+  - id: rc-clean-restore
+    section: Recover
+    requires: {question: pr-backup, min_score: 1}
+    text: "Before restoring from backup, would you check the backup is complete and free of malware?"
+    maps: [RC.RP-03]
+  - id: rc-verify
+    section: Recover
+    text: "After restoring, do you check systems work properly and are clean before returning to normal?"
+    maps: [RC.RP-05]
+  - id: rc-close
+    section: Recover
+    text: "Do you formally close an incident and write a short after-action report with lessons learned?"
+    maps: [RC.RP-06]
+  - id: rc-internal-comms
+    section: Recover
+    text: "Is there a plan for keeping staff, volunteers and the board updated while you recover?"
+    maps: [RC.CO-03]
+  - id: rc-public-comms
+    section: Recover
+    text: "Is someone authorised to make public statements about an incident (website, social media, donors), using agreed wording?"
+    maps: [RC.CO-04]
