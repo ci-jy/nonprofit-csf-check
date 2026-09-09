@@ -19,7 +19,7 @@ Scoring, per applicable subcategory:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 
 from .catalog import Catalog, default_catalog
@@ -136,10 +136,18 @@ class Engine:
                 break
         return out
 
-    def check_answers(self, profile: Mapping[str, bool], answers: Mapping[str, str]) -> None:
-        """Reject answers to unknown or skipped questions and invalid options."""
+    def check_answers(
+        self, profile: Mapping[str, bool], answers: Mapping[str, str], only: Iterable[str] | None = None
+    ) -> None:
+        """Reject answers to unknown or skipped questions and invalid options.
+
+        ``only`` limits the check to some of the answers (the ones just
+        submitted); older answers that a change has made unreachable are the
+        caller's to drop.
+        """
         status = self.question_status(profile, answers)
-        for qid, value in answers.items():
+        for qid in answers if only is None else only:
+            value = answers[qid]
             q = self.bank.by_id.get(qid)
             if q is None:
                 raise AnswerError(f"unknown question {qid!r}")

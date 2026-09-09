@@ -140,7 +140,7 @@ def create_app(database_url: str) -> FastAPI:
         profile, answers, _ = state(a)
         incoming = {x.question_id: x.value for x in body.answers}
         try:
-            engine.check_answers(profile, {**answers, **incoming})
+            engine.check_answers(profile, {**answers, **incoming}, only=incoming)
         except AnswerError as exc:
             raise HTTPException(422, str(exc)) from None
         existing = {r.question_id: r for r in a.answers}
