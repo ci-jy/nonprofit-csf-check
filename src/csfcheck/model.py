@@ -95,11 +95,18 @@ def load_targets(catalog: Catalog | None = None) -> Targets:
     )
 
 
-def load_risk_model() -> RiskModel:
+def load_risk_model(catalog: Catalog | None = None) -> RiskModel:
+    catalog = catalog or default_catalog()
     raw = yaml.safe_load(data_path("risk_model.yaml").read_text(encoding="utf-8"))
     bands = {k: CostBand(k, v["weight"], v["label"]) for k, v in raw["cost_bands"].items()}
     ratings = tuple((float(r["max"]), r["label"]) for r in raw["ratings"])
     model = RiskModel(raw["categories"], bands, raw.get("cost_overrides", {}), raw.get("modifiers", {}), ratings)
+    missing = set(catalog.categories) - set(model.categories)
+    if missing:
+        raise ValueError(f"risk model has no entry for categories: {', '.join(sorted(missing))}")
+    for cat, entry in model.categories.items():
+        if entry["cost"] not in bands or not all(1 <= entry[k] <= 5 for k in ("likelihood", "impact")):
+            raise ValueError(f"risk model entry for {cat} needs a known cost band and 1-5 scores")
     for sub, band in model.cost_overrides.items():
         if band not in bands:
             raise ValueError(f"cost override for {sub} uses unknown band {band!r}")

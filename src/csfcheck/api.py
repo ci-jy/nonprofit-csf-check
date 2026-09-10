@@ -52,7 +52,7 @@ def create_app(database_url: str) -> FastAPI:
     catalog = catalog_from_db(db)
     # Validates questions.yaml against the catalog that is actually in the
     # database; an inconsistent bank stops the app here.
-    engine = Engine(catalog, load_bank(catalog=catalog), load_targets(catalog), load_risk_model())
+    engine = Engine(catalog, load_bank(catalog=catalog), load_targets(catalog), load_risk_model(catalog))
 
     app = FastAPI(
         title="csfcheck",

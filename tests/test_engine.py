@@ -96,3 +96,11 @@ def test_answers_to_skipped_or_unknown_questions_are_rejected(engine):
         engine.check_answers({}, {"nope": "yes"})
     with pytest.raises(AnswerError, match="not an answer"):
         engine.check_answers({}, {"gv-owner": "mostly"})  # yes/no question
+
+
+def test_risk_model_covers_every_category(engine):
+    assert set(engine.model.categories) == set(engine.catalog.categories)
+    full = {f: True for f in engine.bank.flags}
+    for sub in engine.catalog.subcategories:
+        lik, imp = engine.model.inherent(sub, full)
+        assert 1 <= lik <= 5 and 1 <= imp <= 5
