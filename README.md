@@ -130,7 +130,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e '.[dev]'
 
-python3 -m pytest                      # 50 tests, including the PostgreSQL and API ones
+python3 -m pytest                      # 51 tests, including the PostgreSQL and API ones
 python3 -m csfcheck check              # checksum, catalog counts, bank coverage
 python3 -m csfcheck export samples/food_bank.json -o out/food_bank.xlsx
 python3 -m csfcheck stats samples/*.json
