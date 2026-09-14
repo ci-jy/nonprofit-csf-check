@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Action plan{% endblock %}
+{% block body %}
+<h1>Action plan</h1>
+<p>{{ result.actions | length }} actions, one for each gap, ranked by how much risk each removes for what it costs.
+Free actions only need someone's time. The wording comes from NIST's implementation examples for each outcome.</p>
+{% if not result.complete %}<p class="notice">Some questions are still unanswered and count as 0, so the plan may include things you already do.</p>{% endif %}
+
+{% for horizon, actions in groups.items() if actions %}
+<h2>{{ {'Now': 'Do now', 'Next': 'Do next', 'Later': 'Later'}[horizon] }} <small>({{ actions | length }})</small></h2>
+<table class="data plan">
+  <thead><tr><th>#</th><th>Outcome</th><th>What to do</th><th>Cost</th><th>Risk</th><th>Reduced by</th></tr></thead>
+  <tbody>
+  {% for x in actions %}
+  <tr>
+    <td>{{ x.rank }}</td>
+    <td><code>{{ x.subcategory }}</code></td>
+    <td>{{ x.what_to_do }}
+      {% if x.also_consider or x.quick_start %}
+      <details><summary>More</summary>
+        {% if x.quick_start %}<p><strong>Quick-Start Guide:</strong> {{ x.quick_start | join(' ') }}</p>{% endif %}
+        {% for c in x.also_consider %}<p>Also consider: {{ c }}</p>{% endfor %}
+        <p class="ref">CSF outcome: {{ x.outcome }}</p>
+      </details>
+      {% endif %}
+    </td>
+    <td>{{ x.cost_label }}</td>
+    <td><span class="rating {{ x.rating | lower }}">{{ x.rating }} {{ x.risk }}</span></td>
+    <td>{{ x.risk_reduction }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No gaps: every outcome that applies meets its target.</p>
+{% endfor %}
+{% endblock %}

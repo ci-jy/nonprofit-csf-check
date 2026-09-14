@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ section.name }}{% endblock %}
+{% block body %}
+<nav class="steps" aria-label="Sections">
+  {% for s in sections %}
+    {% if s.asked %}
+    <a href="/a/{{ a.id }}/s/{{ s.slug }}" class="{{ 'current' if s.slug == section.slug else '' }} {{ 'done' if s.done else '' }}">{{ s.name }} <small>{{ s.answered }}/{{ s.asked }}</small></a>
+    {% else %}
+    <span class="skipped" title="Nothing in this section applies to you">{{ s.name }}</span>
+    {% endif %}
+  {% endfor %}
+</nav>
+
+<h1>{{ section.name }}</h1>
+<p class="muted">{{ section.answered }} of {{ section.asked }} answered in this section.
+Pick the answer closest to what really happens, not what should happen.</p>
+
+<form method="post" action="/a/{{ a.id }}/s/{{ section.slug }}">
+{% for item in items %}
+  {% set q = item.q %}
+  {% if item.waiting %}
+  <div class="question waiting followup" id="q-{{ q.id }}">
+    <p class="muted">A follow-up question appears here once you have answered the one above it, if it applies to you.</p>
+  </div>
+  {% else %}
+  <fieldset class="question {{ 'followup' if q.requires else '' }} {{ 'answered' if item.value else 'open' }}" id="q-{{ q.id }}">
+    {% if q.requires %}<p class="follows">Follow-up</p>{% endif %}
+    <legend>{{ q.text }}</legend>
+    <p class="help">{{ q.help }}</p>
+    <div class="options">
+    {% for o in q.options %}
+      <label class="option"><input type="radio" name="q_{{ q.id }}" value="{{ o.value }}" {{ 'checked' if item.value == o.value else '' }}> {{ o.label }}</label>
+    {% endfor %}
+    </div>
+    <details {{ 'open' if item.evidence else '' }}>
+      <summary>Evidence you could show (optional)</summary>
+      <textarea name="e_{{ q.id }}" rows="2" placeholder="e.g. backup log in the shared drive, the policy document, a screenshot of the admin console">{{ item.evidence }}</textarea>
+    </details>
+    <p class="ref">CSF 2.0: {{ q.maps | join(', ') }}</p>
+  </fieldset>
+  {% endif %}
+{% endfor %}
+
+  <div class="actions sticky">
+    {% if prev_slug %}<button type="submit" name="go" value="back" class="secondary">← Save and go back</button>{% endif %}
+    <button type="submit" name="go" value="next">Save and continue →</button>
+  </div>
+</form>
+
+{% if skipped %}
+<details class="skiplist">
+  <summary>{{ skipped | length }} question{{ 's' if skipped | length != 1 }} in this section {{ 'is' if skipped | length == 1 else 'are' }} not asked for {{ org.name }}</summary>
+  <ul>
+  {% for item in skipped %}<li><span class="qtext">{{ item.q.text }}</span><br><small>{{ item.note }}</small></li>{% endfor %}
+  </ul>
+</details>
+{% endif %}
+{% endblock %}

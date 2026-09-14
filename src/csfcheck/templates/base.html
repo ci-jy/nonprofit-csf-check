@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}csfcheck{% endblock %} · csfcheck</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">csfcheck</a>
+  <span class="tag">NIST CSF 2.0 self-assessment for small non-profits</span>
+  {% if a is defined %}
+  <nav>
+    <a href="/a/{{ a.id }}">Overview</a>
+    <a href="/a/{{ a.id }}/questions">Questions</a>
+    <a href="/a/{{ a.id }}/heatmap">Heat map</a>
+    <a href="/a/{{ a.id }}/plan">Action plan</a>
+  </nav>
+  {% endif %}
+</header>
+{% if a is defined %}
+<div class="progress-wrap">
+  <div class="org">{{ org.name }}</div>
+  <div class="progress" role="progressbar" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
+    <div class="bar" style="width: {{ pct }}%"></div>
+  </div>
+  <div class="count">{{ answered }} of {{ asked }} questions answered</div>
+</div>
+{% endif %}
+<main>
+{% block body %}{% endblock %}
+</main>
+<footer>
+  A self-assessment against NIST CSF 2.0 outcomes. It does not scan your systems and is not a certification.
+</footer>
+</body>
+</html>

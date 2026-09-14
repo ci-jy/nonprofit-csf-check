@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block body %}
+{% if token %}
+<div class="notice">
+  <strong>Keep this to come back later.</strong>
+  Assessment number <code>{{ a.id }}</code>, resume code <code class="token">{{ token }}</code>.
+  This browser remembers it, but it is only shown once.
+</div>
+{% endif %}
+<h1>{{ org.name }}</h1>
+<p class="muted">What you told us about the organisation:</p>
+<ul class="flags">
+  {% for f, text in flags.items() %}<li>{{ text }}</li>{% else %}<li>No profile options ticked: you will get the questions every organisation is asked.</li>{% endfor %}
+</ul>
+
+<h2>Sections</h2>
+<table class="sections">
+  <thead><tr><th>Section</th><th>Answered</th><th>Not asked for you</th><th></th></tr></thead>
+  <tbody>
+  {% for s in sections %}
+  <tr class="{{ 'done' if s.done else '' }}">
+    <td>{% if s.asked %}<a href="/a/{{ a.id }}/s/{{ s.slug }}">{{ s.name }}</a>{% else %}{{ s.name }}{% endif %}</td>
+    <td>{{ s.answered }} / {{ s.asked }}</td>
+    <td>{{ s.skipped }}</td>
+    <td>{% if s.done %}✓ done{% elif s.answered %}in progress{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<p class="actions">
+  {% if resume_at %}
+  <a class="button" href="/a/{{ a.id }}/s/{{ resume_at }}">{{ 'Continue' if answered else 'Begin' }} the questions</a>
+  {% else %}
+  <a class="button" href="/a/{{ a.id }}/heatmap">See your results</a>
+  {% endif %}
+  <a class="button secondary" href="/a/{{ a.id }}/report.docx">Word report</a>
+  <a class="button secondary" href="/a/{{ a.id }}/workbook.xlsx">Excel workbook</a>
+</p>
+{% if answered < asked %}<p class="muted">You can open the results at any time; unanswered questions count as 0 until you answer them.</p>{% endif %}
+{% endblock %}

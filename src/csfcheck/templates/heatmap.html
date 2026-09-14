@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Heat map{% endblock %}
+{% block body %}
+<h1>Your CSF 2.0 profile</h1>
+{% if not result.complete %}<p class="notice">Some questions are still unanswered and count as 0. <a href="/a/{{ a.id }}/questions">Answer them</a></p>{% endif %}
+<ul class="summary">
+  {% for p in points %}<li>{{ p }}</li>{% endfor %}
+</ul>
+
+<h2>Current against target, by category</h2>
+<p class="muted">Each box is a CSF category. The colour shows how much of the target you reach; the dark bar is where you are
+on the 0-3 scale and the red tick is the target from NIST's Small Business Quick-Start Guide. Hover over a box for detail.</p>
+<div class="heatmap-wrap">{{ svg | safe }}</div>
+
+<h2>By function</h2>
+<table class="data">
+  <thead><tr><th>Function</th><th>Assessed</th><th>At target</th><th>Current</th><th>Target</th><th>Reached</th></tr></thead>
+  <tbody>
+  {% for f in functions %}
+  <tr><td>{{ f.id }} {{ f.title | capitalize }}</td><td>{{ f.assessed }}</td><td>{{ f.at_target }}</td>
+  {% if f.current is none %}<td colspan="3">not applicable</td>{% else %}
+  <td>{{ '%.2f' | format(f.current) }}</td><td>{{ '%.2f' | format(f.target) }}</td><td>{{ (100 * f.attainment) | round | int }}%</td>{% endif %}</tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<p class="actions">
+  <a class="button" href="/a/{{ a.id }}/plan">See the action plan</a>
+  <a class="button secondary" href="/a/{{ a.id }}/report.docx">Download the Word report</a>
+  <a class="button secondary" href="/a/{{ a.id }}/workbook.xlsx">Download the Excel workbook</a>
+</p>
+{% endblock %}

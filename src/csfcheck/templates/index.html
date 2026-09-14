@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Start{% endblock %}
+{% block body %}
+<section class="intro">
+  <h1>How well protected is your organisation?</h1>
+  <p>Answer plain-language questions about how you look after your computers, accounts and data.
+  You get a profile against the NIST Cybersecurity Framework 2.0, a heat map of where the gaps are,
+  a ranked action plan, a Word report for your board and an Excel workbook for whoever reviews the evidence.</p>
+  <p class="muted">The bank has {{ questions }} questions covering all {{ subcategories }} CSF 2.0 outcomes.
+  Questions that don't fit your organisation are skipped, so most people answer 80 to 90 and finish in about 40 minutes.
+  You can stop and come back.</p>
+</section>
+
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+<form method="post" action="/start" class="card">
+  <h2>Start an assessment</h2>
+  <label for="name">Organisation name</label>
+  <input id="name" name="name" type="text" maxlength="200" required>
+  <fieldset>
+    <legend>Tick everything that is true for you</legend>
+    {% for flag, text in flags.items() %}
+    <label class="check"><input type="checkbox" name="{{ flag }}"> {{ text }}</label>
+    {% endfor %}
+  </fieldset>
+  <button type="submit">Start</button>
+</form>
+
+<form method="post" action="/resume" class="card small">
+  <h2>Carry on with an assessment</h2>
+  <div class="row">
+    <div><label for="aid">Assessment number</label><input id="aid" name="assessment_id" type="number" min="1" required></div>
+    <div class="grow"><label for="tok">Resume code</label><input id="tok" name="token" type="text" required autocomplete="off"></div>
+  </div>
+  <button type="submit" class="secondary">Resume</button>
+</form>
+{% endblock %}
