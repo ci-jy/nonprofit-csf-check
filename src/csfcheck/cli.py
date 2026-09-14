@@ -43,6 +43,30 @@ def cmd_export(args) -> int:
     return 0 if result.complete or args.allow_incomplete else 1
 
 
+def cmd_report(args) -> int:
+    from .engine import AnswerError
+    from .report import export_report
+    from .samples import load_answers
+
+    engine = _engine()
+    org = load_answers(args.answers)
+    profile = engine.bank.normalise_profile(org.profile)
+    try:
+        engine.check_answers(profile, org.answers)
+    except AnswerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    result = engine.assess(profile, org.answers)
+    out = export_report(args.output, engine, result, org.answers, org.evidence, org.name, top=args.top)
+    t = result.totals
+    print(
+        f"{org.name}: {t['subcategories_at_target']} of {t['subcategories_assessed']} subcategories at target, "
+        f"{len(result.actions)} actions, top {min(args.top, len(result.actions))} in the report"
+    )
+    print(f"wrote {out}")
+    return 0 if result.complete or args.allow_incomplete else 1
+
+
 def cmd_stats(args) -> int:
     from .samples import load_answers
 
@@ -127,6 +151,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--allow-incomplete", action="store_true")
     p.set_defaults(func=cmd_export)
 
+    p = sub.add_parser("report", help="score an answers file and write the Word findings report")
+    p.add_argument("answers", type=Path)
+    p.add_argument("-o", "--output", type=Path, required=True)
+    p.add_argument("--top", type=int, default=10, help="actions in the report (default 10)")
+    p.add_argument("--allow-incomplete", action="store_true")
+    p.set_defaults(func=cmd_report)
+
     p = sub.add_parser("stats", help="questions asked and skipped for answers files")
     p.add_argument("answers", type=Path, nargs="+")
     p.set_defaults(func=cmd_stats)
@@ -138,7 +169,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--database-url")
     p.set_defaults(func=cmd_load_csf)
 
-    p = sub.add_parser("serve", help="run the API")
+    p = sub.add_parser("serve", help="run the web questionnaire and the API")
     p.add_argument("--database-url")
     p.add_argument("--temp-db", action="store_true", help="start a throwaway local PostgreSQL")
     p.add_argument("--host", default="127.0.0.1")
