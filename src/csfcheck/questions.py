@@ -34,6 +34,7 @@ class Question:
     options: tuple[Option, ...]
     when: Condition | None = None
     requires: tuple[str, int] | None = None
+    help: str = ""
 
     def option(self, value: str) -> Option:
         for opt in self.options:
@@ -143,7 +144,10 @@ def _parse(raw: dict, catalog: Catalog) -> QuestionBank:
                 errors.append(f"{qid} requires {parent}, which must come earlier in the bank")
             requires = (parent, int(item["requires"]["min_score"]))
         when = cond(item["when"], qid) if "when" in item else None
-        questions.append(Question(qid, item["section"], item["text"], maps, options, when, requires))
+        help_text = str(item.get("help", "")).strip()
+        if not help_text:
+            errors.append(f"{qid} has no plain-language help text")
+        questions.append(Question(qid, item["section"], item["text"], maps, options, when, requires, help_text))
         seen.add(qid)
 
     exclusions = []

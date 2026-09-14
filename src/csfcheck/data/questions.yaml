@@ -14,6 +14,9 @@
 # `exclusions` state when a subcategory does not apply at all. The bank is
 # checked at startup over every combination of profile flags: each
 # subcategory must be asked about or excluded, never both and never neither.
+#
+# `help:` is the plain-language hint shown under the question in the web
+# questionnaire.
 
 version: 1
 
@@ -61,379 +64,464 @@ questions:
   - id: gv-mission
     section: Govern
     text: "Have you worked out which of your services would stop if your computers, email or data were unavailable for a week?"
+    help: "Think through a bad week: if email, files or the donor database disappeared, which services would stop first? A short list of your most important activities and the systems each one depends on counts as yes."
     maps: [GV.OC-01, GV.OC-04]
   - id: gv-dependencies
     section: Govern
     text: "Do you know which outside services you cannot operate without (email provider, donation platform, bank, IT helper), and who holds the logins?"
+    help: "List the outside services you rely on every day, such as your email provider, bank, donation site or IT helper, and note who can log in to each. If one person left tomorrow, could someone else still get in?"
     maps: [GV.OC-05, GV.SC-04, ID.AM-04]
   - id: gv-stakeholders
     section: Govern
     text: "Do you know what your board, funders and the people you serve expect from you about protecting their information?"
+    help: "Funders, trustees and the people you help may expect their details to be kept private and safe. Yes means you have checked grant terms, privacy notices or asked your board what they expect."
     maps: [GV.OC-02]
   - id: gv-legal
     section: Govern
     text: "Do you know which data protection laws, funder conditions and contracts apply to the information you hold?"
+    help: "Data protection law covers anyone's personal details you keep. Funders and contracts may add their own rules. Yes means someone has checked which rules apply and noted them somewhere."
     maps: [GV.OC-03]
   - id: gv-owner
     section: Govern
     text: "Is one named person responsible for cybersecurity, even if they are part-time or a volunteer?"
+    help: "This does not need to be an expert. It just needs to be someone whose job includes keeping an eye on security, such as the office manager or a trusted volunteer, and everyone knows it is them."
     answers: yesno
     maps: [GV.RR-02]
   - id: gv-leadership
     section: Govern
     text: "Does your director or board talk about cybersecurity at least once a year and back the person responsible?"
+    help: "Yes if security comes up at a board or management meeting at least yearly, for example a short update from the person responsible, and leaders support them when they ask for time or money."
     maps: [GV.RR-01]
   - id: gv-resources
     section: Govern
     text: "Is there some budget or donated time set aside for IT security (licences, training, an IT helper)?"
+    help: "Even a small amount counts: money for proper software licences, a few hours of volunteer time, or a donated IT support package. No means security only happens when someone finds spare time."
     maps: [GV.RR-03]
   - id: gv-hr
     section: Govern
     when: "has_employees"
     text: "Do hiring and leaving include security steps: confidentiality terms, security duties in job descriptions, return of equipment?"
+    help: "For example: new staff sign a confidentiality agreement, job descriptions mention looking after data, and leavers hand back laptops, keys and phones on their last day."
     maps: [GV.RR-04]
   - id: gv-policy
     section: Govern
     text: "Do you have a written IT or acceptable-use policy that staff and volunteers have read?"
+    help: "A short document saying how people should use organisation computers, email and data, for example: lock your screen, do not share passwords, report odd emails. A page or two that everyone has signed is enough."
     maps: [GV.PO-01]
   - id: gv-policy-review
     section: Govern
     requires: {question: gv-policy, min_score: 1}
     text: "Is that policy updated when things change (new systems, new laws) and are people reminded of it?"
+    help: "Policies go stale. Yes means someone updates it when you bring in a new system or rules change, and people get a reminder, for example at a team meeting or volunteer induction."
     maps: [GV.PO-02]
   - id: gv-risk-register
     section: Govern
     text: "Do you keep a simple list of cyber risks: what could go wrong, how likely it is and how bad it would be?"
+    help: "A risk list is just a table of things that could go wrong, such as a laptop stolen or a fake invoice paid, with a rough guess of how likely and how harmful each is. A simple spreadsheet is enough."
     maps: [GV.RM-06, ID.RA-03, ID.RA-04, ID.RA-05]
   - id: gv-risk-appetite
     section: Govern
     text: "Has the board agreed what you want security to achieve and how much risk is acceptable?"
+    help: "Risk appetite means how much risk you are willing to live with. Yes if the board has said, for example, that donor data must never be exposed but a day without email is acceptable."
     maps: [GV.RM-01, GV.RM-02]
   - id: gv-erm
     section: Govern
     text: "Are cyber risks part of the organisation's general risk register or regular reports to the board?"
+    help: "Many charities already keep a general risk register for the board covering money, safety and reputation. Yes if cyber risks such as data loss or fraud appear on that same list or in board reports."
     maps: [GV.RM-03]
   - id: gv-insurance
     section: Govern
     text: "Have you decided how to handle risks you cannot fix yourselves, for example by checking whether insurance covers a cyber incident?"
+    help: "Some risks you cannot prevent, so you plan for them instead. For example, check whether your insurance covers a cyber attack or data breach, or accept a risk on purpose and record that decision."
     maps: [GV.RM-04]
   - id: gv-speak-up
     section: Govern
     text: "Do staff and volunteers know who to tell about a security worry, including a problem with a supplier?"
+    help: "Everyone should know the name of the person to tell if they clicked a bad link, lost a phone or noticed a supplier doing something careless, and feel safe doing so without being blamed."
     maps: [GV.RM-05]
   - id: gv-opportunities
     section: Govern
     text: "When choosing new technology, do you also look for security gains it could bring (better backups, built-in MFA)?"
+    help: "New tools can make you safer as well as more efficient. For example, moving files to a cloud service may give automatic backups and two-step login that you did not have before."
     maps: [GV.RM-07]
   - id: gv-review
     section: Govern
     text: "At least once a year, do you look back at whether your security measures are working and adjust them?"
+    help: "Once a year, look back: did backups work, did people do the training, were there any scares? Then decide what to change. Running through this questionnaire yearly would count."
     maps: [GV.OV-01, GV.OV-02, GV.OV-03]
   - id: sc-approach
     section: Govern
     text: "Do you have an agreed way of judging the security of suppliers (IT helper, cloud apps, donation platform) as part of managing risk?"
+    help: "Suppliers are the companies and people who run things for you. Yes means you have agreed simple checks before trusting one with your data, such as asking about two-step login, backups and where data is stored."
     maps: [GV.SC-01, GV.SC-03, GV.SC-09]
   - id: sc-contracts
     section: Govern
     requires: {question: sc-approach, min_score: 1}
     text: "Are suppliers' security duties written into the contracts or terms you have checked (who does backups, who patches, breach notice)?"
+    help: "Check your contracts or terms of service say who is responsible for what, for example who does backups, who installs updates, and how fast the supplier must tell you if your data is leaked."
     maps: [GV.SC-02, GV.SC-05]
   - id: sc-due-diligence
     section: Govern
     text: "Before signing up to a new service that will hold your data, does someone check its security (MFA, where data is kept, reputation)?"
+    help: "Before signing up, someone spends ten minutes checking the basics: does it offer two-step login, where is the data kept, is the company well known and well reviewed? A quick checklist counts as yes."
     maps: [GV.SC-06, GV.SC-07, ID.RA-10]
   - id: sc-incidents
     section: Govern
     text: "Do you know how to reach key suppliers in an emergency, and are they part of your incident plans?"
+    help: "If your donation site was hacked on a Saturday, would you know how to reach them? Keep emergency contact details for key suppliers, and mention them in your plan for handling an incident."
     maps: [GV.SC-08]
   - id: sc-exit
     section: Govern
     text: "When you stop using a supplier or app, do you get your data back, have it deleted and close the accounts?"
+    help: "When you cancel an app or change IT helper, download your data, ask for the remaining copies to be deleted, and close or hand over the accounts so nobody is left with access."
     maps: [GV.SC-10]
   - id: it-provider-oversight
     section: Govern
     when: "uses_it_provider"
     text: "Do you know what access your IT provider has, and do they report to you what they changed or found?"
+    help: "Your IT company or freelancer may have admin access to everything. Yes means you know what they can get into, and they tell you what they changed or any problems they spotted, for example in a short monthly note."
     maps: [GV.SC-07, DE.CM-06]
 
   # -------------------------------------------------------------- Identify
   - id: id-hardware
     section: Identify
     text: "Do you keep a list of the organisation's devices (laptops, phones, routers, printers) and who has each one?"
+    help: "A simple spreadsheet listing each laptop, phone, router and printer, and who has it, is enough. It helps you spot lost devices and get equipment back when people leave."
     maps: [ID.AM-01]
   - id: id-software
     section: Identify
     text: "Do you keep a list of the software, apps and online accounts the organisation uses?"
+    help: "A one-page list in a shared drive is enough: the apps and online services you use, what each is for, and who looks after it. Include free tools people signed up to themselves."
     maps: [ID.AM-02]
   - id: id-data-flows
     section: Identify
     text: "Could you sketch where your data goes: which services hold copies and which devices connect to them?"
+    help: "Could you draw a rough picture showing, for example, that donor details go from the website form to the donation platform, then to a spreadsheet on the office laptop? A hand drawing counts."
     maps: [ID.AM-03]
   - id: id-data
     section: Identify
     text: "Do you know what personal or sensitive data you hold, where it is kept, and which of it matters most?"
+    help: "Personal data means anything about a person, such as names, addresses, health notes or bank details. Yes means you know what you hold, where it is kept, and which records would do the most harm if leaked."
     maps: [ID.AM-07, ID.AM-05]
   - id: id-lifecycle
     section: Identify
     text: "Are devices wiped before they are sold, recycled or given away, and replaced before they become unsafe?"
+    help: "Before an old laptop or phone is passed on, it should be fully reset so nobody can recover your files. Devices should also be replaced when they are too old to get security updates."
     maps: [ID.AM-08, PR.PS-03]
   - id: id-vulnerabilities
     section: Identify
     text: "Does someone check for known weaknesses: out-of-date software, unsupported Windows versions, default router settings?"
+    help: "A weakness is a gap an attacker could use, like old software that is no longer fixed or a router still using its factory password. Yes if someone looks for these regularly, even just a yearly check."
     maps: [ID.RA-01]
   - id: id-threat-intel
     section: Identify
     text: "Do you get security alerts or advice from a trusted source (national cyber centre, sector body, your IT provider)?"
+    help: "For example, subscribe to alerts from your national cyber security centre, read a charity sector newsletter that covers scams, or get warnings from your IT provider about current threats."
     maps: [ID.RA-02, DE.AE-07]
   - id: id-risk-plan
     section: Identify
     requires: {question: gv-risk-register, min_score: 1}
     text: "For the risks on your list, is there a plan saying what you will do, who does it and by when?"
+    help: "For each risk on your list, write what you will do about it, who will do it and a target date, for example: turn on two-step login for email, office manager, end of next month."
     maps: [ID.RA-06]
   - id: id-change
     section: Identify
     text: "Are big IT changes (new system, new supplier, changed settings) thought through and recorded before they happen?"
+    help: "Before a big change like moving to a new system or switching suppliers, someone thinks about what could go wrong and writes down what was changed, so it can be undone or explained later."
     maps: [ID.RA-07]
   - id: id-vuln-reports
     section: Identify
     when: "develops_software"
     text: "If someone reports a security flaw in your website or app, is there a published contact and a way to act on it?"
+    help: "Someone may find a security hole in your website and want to tell you. Yes if there is a clear contact, such as a security email address on the site, and someone who will fix it."
     maps: [ID.RA-08]
   - id: id-sources
     section: Identify
     text: "Do you buy devices and software only from reputable sources (no cracked software, no unchecked second-hand kit)?"
+    help: "Buy from known shops and official app stores. Avoid pirated or cracked software and second-hand devices you have not fully reset, as they can contain hidden malicious programs."
     maps: [ID.RA-09]
   - id: id-improve
     section: Identify
     text: "After a scare, a near miss or an audit, do you write down what to improve and follow it up?"
+    help: "After something goes wrong, nearly goes wrong, or an auditor raises a point, note what should change and check later that it actually happened. A short action list is enough."
     maps: [ID.IM-01, ID.IM-03]
   - id: id-exercise
     section: Identify
     text: "Have you ever tested your plans, for example a phishing test or a 'what if we got ransomware' table-top exercise?"
+    help: "A table-top exercise is a meeting where you talk through a pretend incident, such as all files locked by ransomware, and decide who would do what. Sending a practice fake phishing email also counts."
     maps: [ID.IM-02]
   - id: id-ir-plan
     section: Identify
     text: "Do you have a written incident response plan (who to call, what to do first) that staff and volunteers know about?"
+    help: "An incident response plan says what to do when something goes wrong, such as a hacked account or lost laptop: who to call, what to do first, key phone numbers. One page that people know about is fine."
     maps: [ID.IM-04, RS.MA-01]
 
   # --------------------------------------------------------------- Protect
   - id: pr-own-accounts
     section: Protect
     text: "Does everyone have their own login (no shared accounts), and have default passwords on routers and devices been changed?"
+    help: "Each person should log in with their own username, not a shared office password, so you know who did what. Routers, printers and similar devices should not still use the password they came with."
     maps: [PR.AA-01]
   - id: pr-identity-checks
     section: Protect
     text: "Before creating an account or resetting a password, do you confirm who is asking (not just trusting an email)?"
+    help: "Scammers pretend to be staff to get a password reset. Yes if you check the request is genuine, for example by calling the person on a number you already have, before creating or resetting an account."
     maps: [PR.AA-02]
   - id: pr-mfa
     section: Protect
     text: "Is multi-factor authentication (a code or app prompt) turned on for email, banking and any donor or client systems?"
+    help: "Multi-factor authentication means logging in needs a password plus a code from your phone or an app approval. It stops most account takeovers. Yes if it is on for email, banking and your main data systems."
     maps: [PR.AA-03]
   - id: pr-passwords
     section: Protect
     text: "Do people use a password manager or otherwise keep a different strong password for every account?"
+    help: "A password manager is an app that creates and remembers a different strong password for each account. Yes if people use one, or otherwise never reuse the same password in more than one place."
     maps: [PR.AA-03]
   - id: pr-sso
     section: Protect
     when: "uses_cloud_email"
     text: "Do other apps sign in through your Microsoft or Google account (single sign-on), with its sign-in settings reviewed?"
+    help: "Single sign-on means using your Microsoft or Google work login to get into other apps, such as Zoom or a CRM, instead of separate passwords. Yes if you do this and someone has checked those login settings."
     maps: [PR.AA-04]
   - id: pr-least-access
     section: Protect
     text: "Does each person only have access to the files and systems they need, and is access removed promptly when they leave?"
+    help: "People should only see the folders and systems their role needs, for example volunteers not seeing payroll. When someone leaves, their access should be removed within a day or two."
     maps: [PR.AA-05]
   - id: pr-admin-rights
     section: Protect
     text: "Are administrator rights on computers and cloud accounts limited to one or two people?"
+    help: "Administrator rights let someone install software and change all settings. Everyday accounts should not have them. Yes if only one or two trusted people have admin access, ideally on separate accounts."
     maps: [PR.AA-05]
   - id: pr-physical
     section: Protect
     when: "has_office or has_servers"
     text: "Are your premises and equipment locked, with keys or door codes managed and visitors supervised?"
+    help: "For example, the office is locked when empty, you know who holds keys or door codes and change them when people leave, and visitors are not left alone near computers or files."
     maps: [PR.AA-06]
   - id: pr-training
     section: Protect
     text: "Do staff and volunteers get basic security training (phishing, passwords, how to report) at least once a year?"
+    help: "A short yearly session or online course covering fake emails, good passwords and how to report problems counts as yes. Include volunteers who use your systems, not only paid staff."
     maps: [PR.AT-01]
   - id: pr-role-training
     section: Protect
     text: "Do the people who run IT, finance or donor records get extra training for the risks of their role?"
+    help: "People handling money, donor data or admin access are the main targets for scams. Yes if they get a little extra training, such as spotting fake invoices or managing admin accounts safely."
     maps: [PR.AT-02]
   - id: pr-encryption
     section: Protect
     text: "Are laptops and phones encrypted and locked with a PIN or password (BitLocker, FileVault, phone passcode)?"
+    help: "Encryption scrambles the data so a thief cannot read it without the password. On Windows this is BitLocker, on Mac FileVault, and most phones do it once a passcode is set. Yes if all devices have this on."
     maps: [PR.DS-01]
   - id: pr-in-transit
     section: Protect
     text: "Is data sent securely: website on HTTPS, sensitive files shared by secure link rather than as plain email attachments?"
+    help: "Your website address should start with https and show a padlock. Sensitive documents should be shared through a secure link with access controls rather than attached to ordinary emails."
     maps: [PR.DS-02]
   - id: pr-in-use
     section: Protect
     text: "Do people lock their screens when they step away and avoid working on sensitive data where others can see it?"
+    help: "For example, people press Windows key + L or close the laptop lid when leaving their desk, and do not open client records on a train or in a cafe where others can read the screen."
     maps: [PR.DS-10]
   - id: pr-backup
     section: Protect
     text: "Are important files and databases backed up automatically, with a copy kept separate from the main system?"
+    help: "Backups should happen automatically, not when someone remembers. Keep at least one copy separate, such as a cloud backup service or a drive kept offline, so ransomware or a fire cannot destroy both."
     maps: [PR.DS-11]
   - id: pr-backup-test
     section: Protect
     requires: {question: pr-backup, min_score: 1}
     text: "Have you test-restored something from backup in the last year to prove it works?"
+    help: "A backup is only useful if you can get files back from it. Yes if someone has tried restoring a file or folder from backup in the past year and it worked."
     maps: [PR.DS-11, RC.RP-03]
   - id: pr-sharing
     section: Protect
     text: "Are shared folders and links restricted, so sensitive files are not open to 'anyone with the link'?"
+    help: "Links set to anyone with the link can be forwarded to anyone. Yes if sensitive files are shared only with named people, and someone checks now and then for open links."
     maps: [PR.IR-01]
   - id: pr-network
     section: Protect
     when: "has_office or has_servers"
     text: "Is your office Wi-Fi protected with a strong password, with a separate guest network and the router firewall on?"
+    help: "Office Wi-Fi should have a strong password that is changed when people leave, visitors should use a separate guest network, and the router's built-in firewall should be switched on."
     maps: [PR.IR-01]
   - id: pr-environment
     section: Protect
     when: "has_office or has_servers"
     text: "Is equipment protected from power cuts, water and heat (surge protector or UPS, nothing on the floor of a damp room)?"
+    help: "A UPS is a battery box that keeps equipment running briefly in a power cut. Yes if key equipment has surge protection or a UPS and is kept away from water, heat and dust."
     maps: [PR.IR-02]
   - id: pr-continuity
     section: Protect
     text: "If your main laptop, premises or internet connection were lost, could you keep essential services running?"
+    help: "Could you keep running if the main laptop died, the office flooded or the internet went down? Yes if you have a fallback, such as a spare device, working from home, or a phone hotspot."
     maps: [PR.IR-03]
   - id: pr-capacity
     section: Protect
     text: "Does someone watch storage space, licences and internet capacity so systems do not run out?"
+    help: "Someone checks now and then that cloud storage is not nearly full, licences have not run out and the internet connection copes, so systems do not suddenly stop working."
     maps: [PR.IR-04]
   - id: pr-secure-setup
     section: Protect
     text: "Are new devices set up the same secure way every time (firewall on, auto-lock, unneeded software removed)?"
+    help: "Use a short checklist every time you set up a laptop or phone, such as turn on firewall and updates, set screen lock, remove unneeded apps. Following the same steps each time counts as yes."
     maps: [PR.PS-01]
   - id: pr-updates
     section: Protect
     text: "Are automatic updates turned on for operating systems, browsers and apps?"
+    help: "Updates fix security holes. Yes if Windows or macOS, phones, web browsers and other apps are set to update automatically, and people restart when asked rather than postponing for weeks."
     maps: [PR.PS-02]
   - id: pr-unsupported
     section: Protect
     text: "Have you replaced devices and software that no longer receive security updates?"
+    help: "Old software and devices stop getting security fixes, for example older Windows versions or phones several years old. Yes if you have replaced or retired anything that no longer gets updates."
     maps: [PR.PS-02, PR.PS-03]
   - id: pr-logs
     section: Protect
     when: "uses_cloud_email or has_servers"
     text: "Is sign-in and audit logging turned on in your admin console or servers, and kept for at least 90 days?"
+    help: "Logs are records of who signed in and what changed. Yes if audit logging is switched on in your Microsoft or Google admin console, or on your server, and kept for at least three months."
     maps: [PR.PS-04]
   - id: pr-software-control
     section: Protect
     text: "Are ordinary users prevented from installing whatever software they like on organisation devices?"
+    help: "Yes if normal users cannot install programs on organisation computers without an administrator, so free tools or downloads that might contain malicious programs cannot be added freely."
     maps: [PR.PS-05]
   - id: pr-secure-dev
     section: Protect
     when: "develops_software"
     text: "When you change your website or app code, is it reviewed, kept up to date and checked for known flaws?"
+    help: "Yes if code changes are checked by a second person before going live, the plugins and libraries you use are kept up to date, and someone checks for known security problems in them."
     maps: [PR.PS-06]
   - id: remote-devices
     section: Protect
     when: "remote_staff"
     text: "Do people working from home or on their own devices follow basic rules: passcode, updates, no shared family logins?"
+    help: "For home working or personal devices, agree simple rules: a passcode or password on the device, updates installed, and organisation accounts not shared with family members."
     maps: [PR.IR-01, PR.DS-10]
   - id: remote-lost-device
     section: Protect
     when: "remote_staff"
     text: "If a personal phone or laptop with organisation data is lost or its owner leaves, can you remove that data or access?"
+    help: "If a phone with work email is lost or a volunteer leaves, can you sign them out, remove work data or block their access? Yes if you know how, for example through your admin console."
     maps: [PR.DS-01, PR.AA-05]
   - id: payments-provider
     section: Protect
     when: "takes_payments"
     text: "Do you take card payments only through a PCI-compliant provider (e.g. Stripe, PayPal, a card terminal), never storing card numbers yourselves?"
+    help: "PCI is the card industry's security standard. Using a provider such as Stripe, PayPal or a bank card machine means they hold card numbers, not you. Never write card numbers down or keep them in spreadsheets."
     answers: yesno
     maps: [PR.DS-01, PR.DS-02]
   - id: payments-bank-changes
     section: Protect
     when: "takes_payments"
     text: "Are requests to change a payee's bank details confirmed by phone on a known number before any money is sent?"
+    help: "A common fraud is an email saying a supplier has new bank details. Yes if you always phone them on a number you already had, never one from the email, before paying to new details."
     maps: [PR.AA-02]
   - id: payments-review
     section: Detect
     when: "takes_payments"
     text: "Does someone regularly check donation and payment records for odd transactions, refunds or test payments?"
+    help: "For example, someone looks at donation and payment reports each month for things that look wrong, such as lots of tiny donations, which can be fraudsters testing stolen cards, or unexpected refunds."
     maps: [DE.CM-03, DE.AE-02]
   - id: donor-access
     section: Protect
     when: "holds_donor_data"
     text: "Is access to the donor or member database limited to named people, with bulk exports controlled?"
+    help: "Only the people who need the donor or member list should be able to open it, each with their own login. Downloading the whole list should be limited to a few people."
     maps: [PR.AA-05, PR.DS-01]
   - id: donor-retention
     section: Identify
     when: "holds_donor_data"
     text: "Do you delete donor or member records you no longer need, following a written retention period?"
+    help: "Yes if you have decided how long to keep records of past donors or members, for example a set number of years after their last gift, written it down, and actually delete old records."
     maps: [ID.AM-08]
   - id: client-data
     section: Protect
     when: "holds_client_data"
     text: "Is sensitive information about the people you serve kept apart from general files, with stricter access?"
+    help: "Records about the people you help, such as health, family or housing details, should be in a separate folder or system that only the staff who need them can open, not in the general shared drive."
     maps: [PR.DS-01, ID.AM-05]
   - id: cloud-email-filtering
     section: Detect
     when: "uses_cloud_email"
     text: "Is phishing and malware filtering on for email, and are SPF, DKIM and DMARC set up for your domain?"
+    help: "Spam and malware filtering should be on in your email service. SPF, DKIM and DMARC are settings on your web address that stop others sending emails pretending to be you. Your IT helper can check these."
     maps: [DE.CM-09, PR.PS-01]
   - id: cloud-admin-alerts
     section: Detect
     when: "uses_cloud_email"
     text: "Are security defaults and alert emails switched on in your Microsoft 365 or Google Workspace admin console?"
+    help: "Microsoft 365 and Google Workspace have built-in security settings and alert emails, for example for suspicious sign-ins. Yes if these are switched on and the alerts go to someone who reads them."
     maps: [DE.AE-06, DE.CM-03]
   - id: server-maintenance
     section: Protect
     when: "has_servers"
     text: "Are your server or NAS updated, with remote admin access switched off or restricted?"
+    help: "A NAS is a storage box on your office network. Yes if it gets updates, and remote access from the internet is turned off or limited to a secure method that your IT helper set up."
     maps: [PR.PS-02, PR.AA-05]
   - id: server-health
     section: Detect
     when: "has_servers"
     text: "Is the server or NAS checked for disk health, free space and failed backups?"
+    help: "Yes if someone regularly checks the server or storage box for warnings about failing disks, running out of space, or backups that did not complete, or gets automatic emails about these."
     maps: [PR.IR-04, DE.CM-09]
 
   # ---------------------------------------------------------------- Detect
   - id: de-antimalware
     section: Detect
     text: "Is anti-malware (e.g. Microsoft Defender) running on every computer, with someone who sees its warnings?"
+    help: "Anti-malware software spots and blocks harmful programs. Microsoft Defender is built into Windows and is fine. Yes if it is on every computer and someone notices and acts on its warnings."
     maps: [DE.CM-09]
   - id: de-network
     section: Detect
     when: "has_office or has_servers"
     text: "Does anything watch your network for unusual activity (router alerts, a managed firewall, your IT provider)?"
+    help: "Something should notice odd traffic on your office network, such as a device you do not recognise. Router alerts, a managed firewall or monitoring by your IT provider would count as yes."
     maps: [DE.CM-01]
   - id: de-physical
     section: Detect
     when: "has_office or has_servers"
     text: "Would you notice a break-in or tampering with equipment (alarm, camera, a regular check)?"
+    help: "Would you know if someone got into the office or interfered with equipment? An alarm, a camera, or a quick check when opening up each day all count as yes."
     maps: [DE.CM-02]
   - id: de-account-activity
     section: Detect
     text: "Would you notice unusual account activity, such as sign-ins from abroad, new mail-forwarding rules or mass downloads?"
+    help: "Signs of a hacked account include logins from other countries, new rules forwarding emails elsewhere, or huge downloads. Yes if alerts for these are on or someone checks for them."
     maps: [DE.CM-03]
   - id: de-services
     section: Detect
     text: "Do you read the security notices your online services send, and act on warnings about your accounts?"
+    help: "Services like Google, Microsoft or your bank send emails such as new sign-in detected or password changed. Yes if people read these and check anything they did not do themselves."
     maps: [DE.CM-06]
   - id: de-triage
     section: Detect
     text: "When someone reports something odd (a strange email, a pop-up, a locked account), does someone look into what happened?"
+    help: "When someone says they got a strange email or their account is locked, someone should follow it up to find out what happened, rather than just saying not to worry about it."
     maps: [DE.AE-02]
   - id: de-correlate
     section: Detect
     requires: {question: de-triage, min_score: 1}
     text: "Does that person check more than one place (email, anti-malware, bank, the supplier) to piece events together?"
+    help: "For example, after a suspicious email, they also check the email account's sign-in history, anti-malware alerts and bank account, to see whether it is part of something bigger."
     maps: [DE.AE-03]
   - id: de-scope
     section: Detect
     requires: {question: de-triage, min_score: 1}
     text: "Do they work out how serious it is: which data, accounts and services could be affected?"
+    help: "Yes if they work out what could be affected, such as which accounts, data and services, so you know whether this is a small hiccup or a serious problem that needs the full plan."
     maps: [DE.AE-04]
   - id: de-alerts
     section: Detect
     text: "Do security alerts go to a person (or your IT provider) who will act on them, not an unread inbox?"
+    help: "Security warnings are useless if nobody reads them. Yes if alerts from email, backups and anti-malware go to a named person or your IT provider who will act, not a shared inbox nobody checks."
     maps: [DE.AE-06]
   - id: de-declare
     section: Detect
     text: "Is there a clear rule for when a problem counts as an incident and the response plan starts?"
+    help: "An incident is a security problem serious enough to need your response plan. Yes if you have a simple rule, for example any lost device, hacked account or suspected data leak counts."
     maps: [DE.AE-08]
 
   # --------------------------------------------------------------- Respond
@@ -441,64 +529,79 @@ questions:
     section: Respond
     requires: {question: id-ir-plan, min_score: 1}
     text: "Does the plan say who makes decisions in an incident and who calls outside help (IT provider, insurer, police)?"
+    help: "Yes if the plan names who is in charge during an incident, who can approve spending or shutting things down, and who phones your IT provider, insurer or the police."
     maps: [RS.MA-01, RS.MA-04]
   - id: rs-triage
     section: Respond
     text: "When an incident is reported, does someone confirm it is real and decide how urgent it is?"
+    help: "When a problem is reported, someone checks it is really happening and decides how urgent it is, for example a hacked bank login is urgent, a single spam email usually is not."
     maps: [RS.MA-02, RS.MA-03]
   - id: rs-escalate
     section: Respond
     text: "Do people know when to escalate a problem to the director, the board, your insurer or the police?"
+    help: "Escalate means passing a problem up to someone with more authority. Yes if people know, for example, that money lost or personal data exposed must go to the director straight away."
     maps: [RS.MA-04]
   - id: rs-recovery-trigger
     section: Respond
     requires: {question: id-ir-plan, min_score: 1}
     text: "Does the plan say when to stop containing an incident and start restoring systems?"
+    help: "Containing means stopping the damage spreading. Yes if the plan says when that is done and it is safe to start restoring systems, for example once the cause is removed and passwords are changed."
     maps: [RS.MA-05]
   - id: rs-contain
     section: Respond
     text: "Do you know how to contain an incident quickly: disconnect a device, reset passwords, suspend an account, remove the cause?"
+    help: "Yes if someone knows how to take quick action: unplug or disconnect an infected computer from the network, change passwords, suspend a compromised account, and remove the harmful program or rule."
     maps: [RS.MI-01, RS.MI-02]
   - id: rs-investigate
     section: Respond
     text: "After an incident, do you find out what happened, how far it spread and the root cause (alone or with help)?"
+    help: "Yes if, after an incident, you find out how it happened, what was affected and the underlying cause, such as a reused password, either yourselves or with help from your IT provider."
     maps: [RS.AN-03, RS.AN-08]
   - id: rs-evidence
     section: Respond
     text: "During an incident, would someone keep notes of what was done and preserve evidence (not wipe the laptop straight away)?"
+    help: "Write down what happened and what you did, with times. Do not wipe or reset a device straight away, as your IT helper, insurer or the police may need to look at it first."
     maps: [RS.AN-06, RS.AN-07]
   - id: rs-notify
     section: Respond
     text: "Do you know who you must tell after a data breach (regulator, donors, funders, clients) and how quickly?"
+    help: "Data breaches may have to be reported to your data protection regulator, often within a few days, and to affected people or funders. Yes if you know who to tell and how quickly."
     maps: [RS.CO-02, RS.CO-03]
 
   # --------------------------------------------------------------- Recover
   - id: rc-roles
     section: Recover
     text: "Do you know who inside and outside the organisation is responsible for restoring systems after an incident?"
+    help: "Yes if you know who will get things working again after an incident, for example the office manager restores files from backup and your IT provider rebuilds laptops."
     maps: [RC.RP-01]
   - id: rc-priorities
     section: Recover
     text: "Have you decided which systems and data to restore first, and how to keep essential services going meanwhile?"
+    help: "Decide in advance which systems come back first, for example email and the client database before the website, and how you would keep vital services going on paper or by phone meanwhile."
     maps: [RC.RP-02, RC.RP-04]
   - id: rc-clean-restore
     section: Recover
     requires: {question: pr-backup, min_score: 1}
     text: "Before restoring from backup, would you check the backup is complete and free of malware?"
+    help: "Before restoring, check the backup has everything you need and comes from before the problem started, so you do not bring the virus or damage back with it."
     maps: [RC.RP-03]
   - id: rc-verify
     section: Recover
     text: "After restoring, do you check systems work properly and are clean before returning to normal?"
+    help: "After restoring, check things really work and are clean, for example open some files, run an anti-malware scan and change passwords, before everyone goes back to normal work."
     maps: [RC.RP-05]
   - id: rc-close
     section: Recover
     text: "Do you formally close an incident and write a short after-action report with lessons learned?"
+    help: "Yes if someone formally declares the incident over and writes a short note on what happened, what worked and what to change. Half a page shared with the board is enough."
     maps: [RC.RP-06]
   - id: rc-internal-comms
     section: Recover
     text: "Is there a plan for keeping staff, volunteers and the board updated while you recover?"
+    help: "During recovery, people need to know what is working and what to do. Yes if someone is responsible for keeping staff, volunteers and the board updated, for example by phone or text group."
     maps: [RC.CO-03]
   - id: rc-public-comms
     section: Recover
     text: "Is someone authorised to make public statements about an incident (website, social media, donors), using agreed wording?"
+    help: "Yes if one person is named to speak publicly about an incident, and you have some draft wording ready for your website, social media or donors, so nobody posts something hasty."
     maps: [RC.CO-04]
