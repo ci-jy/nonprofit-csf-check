@@ -1,5 +1,7 @@
 """FastAPI service: organisations, assessments, question flow and results.
 
+The JSON API lives here; the server-rendered pages are in ``web``.
+
 Each assessment gets one random token when it is created; every request about
 that assessment must send it in the ``X-Assessment-Token`` header. Only its
 SHA-256 is stored.
@@ -18,7 +20,8 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from .db import AnswerRow, Assessment, Organisation, catalog_from_db, load_core, make_engine
+from . import web
+from .db import Assessment, Organisation, catalog_from_db, load_core, make_engine, store_answers
 from .engine import AnswerError, Engine
 from .model import load_risk_model, load_targets
 from .questions import load_bank
@@ -57,10 +60,11 @@ def create_app(database_url: str) -> FastAPI:
     app = FastAPI(
         title="csfcheck",
         description="NIST CSF 2.0 self-assessment for small non-profits",
-        version="0.1.0",
+        version="0.2.0",
     )
     app.state.engine = engine
     app.state.db = db
+    web.install(app, engine, db, _hash)
 
     def session():
         with Session(db) as s:
@@ -143,22 +147,9 @@ def create_app(database_url: str) -> FastAPI:
             engine.check_answers(profile, {**answers, **incoming}, only=incoming)
         except AnswerError as exc:
             raise HTTPException(422, str(exc)) from None
-        existing = {r.question_id: r for r in a.answers}
-        for x in body.answers:
-            row = existing.get(x.question_id)
-            if row is None:
-                a.answers.append(AnswerRow(question_id=x.question_id, value=x.value, evidence=x.evidence))
-            else:
-                row.value, row.evidence = x.value, x.evidence or row.evidence
-        # Lowering an answer can make earlier follow-up answers unreachable;
-        # drop them so the stored state never holds a skipped question.
-        merged = {r.question_id: r.value for r in a.answers}
-        status = engine.question_status(profile, merged)
-        for r in list(a.answers):
-            if status[r.question_id] != "asked":
-                a.answers.remove(r)
+        stored = store_answers(engine, a, {x.question_id: (x.value, x.evidence or None) for x in body.answers})
         s.commit()
-        return {"saved": len(body.answers), "answered": len(a.answers)}
+        return {"saved": len(body.answers), "answered": stored}
 
     @app.get("/assessments/{assessment_id}/profile")
     def profile(a: Assessment = Depends(assessment)):

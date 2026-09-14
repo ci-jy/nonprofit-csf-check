@@ -76,6 +76,31 @@ class AnswerRow(Base):
     evidence: Mapped[str] = mapped_column(Text, default="")
 
 
+def store_answers(engine, a: Assessment, incoming: dict[str, tuple[str, str | None]]) -> int:
+    """Save answers (value, evidence) on an assessment and drop unreachable ones.
+
+    ``engine`` is the scoring engine. An evidence of ``None`` keeps whatever
+    was stored before. Lowering an answer can make earlier follow-up answers
+    unreachable; those are removed so the stored state never holds a skipped
+    question. Returns the number of answers now stored.
+    """
+    existing = {r.question_id: r for r in a.answers}
+    for qid, (value, evidence) in incoming.items():
+        row = existing.get(qid)
+        if row is None:
+            a.answers.append(AnswerRow(question_id=qid, value=value, evidence=evidence or ""))
+        else:
+            row.value = value
+            if evidence is not None:
+                row.evidence = evidence
+    merged = {r.question_id: r.value for r in a.answers}
+    status = engine.question_status(a.organisation.profile, merged)
+    for r in list(a.answers):
+        if status[r.question_id] != "asked":
+            a.answers.remove(r)
+    return len(a.answers)
+
+
 def make_engine(url: str) -> SAEngine:
     return create_engine(url, pool_pre_ping=True)
 
