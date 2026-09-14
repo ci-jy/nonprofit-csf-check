@@ -16,6 +16,9 @@ dependencies = [
     "psycopg[binary]>=3.1",
     "pyyaml>=6.0",
     "openpyxl>=3.1",
+    "python-docx>=1.1",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.9",
     "pydantic>=2.5",
 ]
 
@@ -33,7 +36,7 @@ csfcheck = "csfcheck.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-csfcheck = ["data/*.json", "data/*.yaml", "data/*.sha256"]
+csfcheck = ["data/*.json", "data/*.yaml", "data/*.sha256", "templates/*.html", "static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
