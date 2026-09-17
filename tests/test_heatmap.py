@@ -55,3 +55,11 @@ def test_rollup_ignores_excluded_subcategories(engine):
         assert grid[cat].excluded > 0
     assert sum(c.assessed for c in grid.values()) == result.totals["subcategories_assessed"]
     assert all(c.attainment == 0 for c in grid.values() if c.assessed)
+
+
+def test_food_bank_function_figures_in_readme(engine):
+    # The README's per-function table quotes these; keep it honest.
+    org = load_answers(SAMPLES[[p.stem for p in SAMPLES].index("food_bank")])
+    result = engine.assess(org.profile, org.answers)
+    reached = {f.id: round(100 * f.attainment) for f in by_function(engine.catalog, result)}
+    assert reached == {"GV": 33, "ID": 19, "PR": 46, "DE": 30, "RS": 10, "RC": 11}
