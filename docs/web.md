@@ -49,3 +49,13 @@ The box colour runs from red (0% reached) through amber (50%) to green (100%), a
 6. About this assessment: it is a self-assessment, nothing was scanned, it is not a certification, and how many answers came with evidence.
 
 `report` exits 1 for an incomplete answers file unless `--allow-incomplete` is given, like `export`.
+
+## Screenshots
+
+The action plan page for the food bank sample:
+
+![Action plan page](web-plan.png)
+
+The second page of the food bank's Word report, with the category table and the first actions:
+
+![Word report, profile by category](report-page2.png)
