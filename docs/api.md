@@ -1,6 +1,6 @@
 # API
 
-The API is FastAPI on PostgreSQL. Interactive docs are at `/docs` once it is running.
+The API is FastAPI on PostgreSQL. Interactive docs are at `/docs` once it is running. The same process serves the web questionnaire at `/` (see [web.md](web.md)).
 
 ![FastAPI docs for the csfcheck API](api-docs.png)
 

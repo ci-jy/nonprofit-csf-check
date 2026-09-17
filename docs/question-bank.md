@@ -29,6 +29,7 @@ The other four are `holds_client_data` (sensitive information about the people y
 ## Question fields
 
 - `id`, `section`, `text`
+- `help`: one or two plain-language sentences shown under the question in the web questionnaire, usually saying what would count as a yes. Required; a question without it stops the app at startup.
 - `maps`: the CSF 2.0 subcategory IDs the question scores
 - `when`: a boolean expression over profile flags, e.g. `has_office or has_servers`. If it is false, the question is never asked and doesn't count towards any score.
 - `requires`: a parent question and minimum score. If the parent scores lower, the follow-up is skipped and scores 0.
