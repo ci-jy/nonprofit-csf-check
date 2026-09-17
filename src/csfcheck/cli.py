@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import signal
 import sys
 from pathlib import Path
 
@@ -121,6 +122,10 @@ def cmd_load_csf(args) -> int:
     return 0
 
 
+def _exit_on_sigterm(signum, frame):
+    raise SystemExit(0)
+
+
 def cmd_serve(args) -> int:
     import uvicorn
 
@@ -128,6 +133,9 @@ def cmd_serve(args) -> int:
     from .devdb import temporary_postgres
 
     if args.temp_db:
+        # uvicorn re-raises SIGTERM after shutting down; turn it into an
+        # exception so the throwaway cluster below is still stopped and removed.
+        signal.signal(signal.SIGTERM, _exit_on_sigterm)
         with temporary_postgres() as url:
             print(f"using temporary PostgreSQL at {url}")
             uvicorn.run(create_app(url), host=args.host, port=args.port)
