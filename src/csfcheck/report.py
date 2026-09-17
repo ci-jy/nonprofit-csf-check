@@ -23,7 +23,7 @@ from .rollup import by_category, by_function
 TOP_ACTIONS = 10
 PROFILE_HEADERS = ("Function", "Subcategories assessed", "At target", "Current (0-3)", "Target (0-3)", "Target reached")
 CATEGORY_HEADERS = ("Category", "Current", "Target", "Reached", "Worst gap rating")
-ACTION_HEADERS = ("Rank", "Subcategory", "What to do", "Cost", "Risk now", "Risk reduced")
+ACTION_HEADERS = ("Rank", "CSF ID", "What to do", "Cost", "Risk now", "Reduced by")
 RATING_COLOURS = {"Low": "C6EFCE", "Medium": "FFEB9C", "High": "F8CBAD", "Critical": "FF7C80"}
 
 
@@ -50,6 +50,9 @@ def _table(doc, headers, rows, widths=None):
         for cell, value in zip(cells, values):
             cell.text = "" if value is None else str(value)
     if widths:
+        table.autofit = False
+        for col, w in zip(table.columns, widths):
+            col.width = Cm(w)
         for row in table.rows:
             for cell, w in zip(row.cells, widths):
                 cell.width = Cm(w)
@@ -165,7 +168,7 @@ def build_report(
     _table(
         doc, ACTION_HEADERS,
         [(a.rank, a.subcategory, a.what_to_do, a.cost_label, a.risk, a.risk_reduction) for a in result.actions[:top]],
-        widths=(1.2, 2.2, 8.5, 3, 1.5, 1.6),
+        widths=(1.3, 2.3, 7.4, 2.8, 1.5, 1.7),
     )
 
     excluded = [r for r in result.subcategories if r.status == "excluded"]
