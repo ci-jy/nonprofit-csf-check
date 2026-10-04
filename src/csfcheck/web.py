@@ -88,9 +88,7 @@ def build_router(engine: Engine, db: SAEngine, token_hash) -> APIRouter:
         return a
 
     def state(a: Assessment):
-        answers = {r.question_id: r.value for r in a.answers}
-        evidence = {r.question_id: r.evidence for r in a.answers if r.evidence}
-        return a.organisation.profile, answers, evidence
+        return a.answer_state()
 
     def progress(profile, answers):
         status = engine.question_status(profile, answers)
@@ -143,7 +141,7 @@ def build_router(engine: Engine, db: SAEngine, token_hash) -> APIRouter:
         s.add(org)
         s.flush()
         token = secrets.token_urlsafe(24)
-        a = Assessment(organisation_id=org.id, token_hash=token_hash(token))
+        a = Assessment(organisation_id=org.id, token_hash=token_hash(token), version=1, profile=profile)
         s.add(a)
         s.commit()
         resp = RedirectResponse(f"/a/{a.id}?new=1", status_code=303)
