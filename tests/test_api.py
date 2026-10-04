@@ -9,7 +9,7 @@ from csfcheck.api import create_app
 from csfcheck.engine import ASKED
 from csfcheck.workbook import SHEETS
 
-from .conftest import SAMPLES
+from .conftest import ROOT, SAMPLES
 
 
 @pytest.fixture(scope="module")
@@ -124,3 +124,59 @@ def test_token_is_required(client):
 def test_unknown_profile_flag_is_rejected(client):
     r = client.post("/organisations", json={"name": "x", "profile": {"has_pets": True}})
     assert r.status_code == 422
+
+
+def test_retake_keeps_the_token_and_compares_versions(client, engine):
+    old = json.loads((ROOT / "samples" / "food_bank.json").read_text())
+    new = json.loads((ROOT / "samples" / "retakes" / "food_bank.json").read_text())
+    aid, headers = start(client, old["organisation"]["name"], old["organisation"]["profile"])
+    answer = lambda a, answers: client.post(  # noqa: E731
+        f"/assessments/{a}/answers", headers=headers,
+        json={"answers": [{"question_id": q, "value": v} for q, v in answers.items()]},
+    )
+    assert answer(aid, old["answers"]).status_code == 200
+    assert client.get(f"/assessments/{aid}/compare", headers=headers).status_code == 404  # nothing earlier
+
+    r = client.post(f"/assessments/{aid}/retake", headers=headers, json={"profile": new["organisation"]["profile"]})
+    assert r.status_code == 201, r.text
+    v2 = r.json()
+    assert v2["version"] == 2 and v2["previous_id"] == aid
+    assert v2["answers_copied"] == len(old["answers"])  # same token, answers carried over
+    nxt = client.get(f"/assessments/{v2['id']}/next?limit=100", headers=headers).json()
+    # Only the questions the new profile adds; follow-ups wait for their parents to improve.
+    assert {q["id"] for q in nxt["questions"]} == {"remote-devices", "remote-lost-device"}
+
+    changed = {q: v for q, v in new["answers"].items() if old["answers"].get(q) != v}
+    parents = {q: v for q, v in changed.items() if not engine.bank.by_id[q].requires}
+    assert answer(v2["id"], parents).status_code == 200
+    assert answer(v2["id"], {q: v for q, v in changed.items() if q not in parents}).status_code == 200
+    assert client.get(f"/assessments/{v2['id']}/next", headers=headers).json()["complete"]
+
+    # The first version is still scored on its own profile and answers.
+    first = client.get(f"/assessments/{aid}/profile", headers=headers).json()
+    assert first["version"] == 1 and first["totals"]["subcategories_at_target"] == 19
+
+    diff = client.get(f"/assessments/{v2['id']}/compare", headers=headers).json()
+    assert diff["before"] == {"id": aid, "version": 1}
+    expected = engine.assess(new["organisation"]["profile"], new["answers"])
+    assert diff["totals"]["at_target_after"] == expected.totals["subcategories_at_target"] == 22
+    assert (diff["totals"]["improved"], diff["totals"]["regressed"], diff["totals"]["actions_completed"]) == (18, 3, 4)
+    assert diff["profile_changes"] == {"remote_staff": {"before": False, "after": True}}
+
+    listed = client.get(f"/assessments/{aid}/versions", headers=headers).json()["versions"]
+    assert [v["version"] for v in listed] == [1, 2]
+
+    wb = load_workbook(io.BytesIO(client.get(f"/assessments/{v2['id']}/workbook", headers=headers).content))
+    summary = {row[0]: row[1] for row in wb["Progress"].iter_rows(max_row=13, values_only=True)}
+    assert summary["Compared"] == "version 2 with version 1"
+    assert summary["Actions completed"] == "4 of 85"
+
+
+def test_compare_refuses_another_organisations_assessment(client):
+    a1, h1 = start(client, "Club A", {})
+    a2, h2 = start(client, "Club B", {})
+    assert client.get(f"/assessments/{a1}/compare?with={a2}", headers=h1).status_code == 404
+    assert client.post(f"/assessments/{a1}/retake", headers=h2).status_code == 404
+    v2 = client.post(f"/assessments/{a1}/retake", headers=h1).json()
+    assert client.get(f"/assessments/{v2['id']}/compare?with={a1}", headers=h1).status_code == 200
+    assert client.get(f"/assessments/{v2['id']}/compare", headers=h2).status_code == 404

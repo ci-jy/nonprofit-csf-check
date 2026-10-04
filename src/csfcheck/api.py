@@ -4,7 +4,8 @@ The JSON API lives here; the server-rendered pages are in ``web``.
 
 Each assessment gets one random token when it is created; every request about
 that assessment must send it in the ``X-Assessment-Token`` header. Only its
-SHA-256 is stored.
+SHA-256 is stored. A retake keeps the token, so the same header opens every
+version of the organisation's assessment and the comparison between them.
 """
 
 from __future__ import annotations
@@ -21,11 +22,12 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from . import web
-from .db import Assessment, Organisation, catalog_from_db, load_core, make_engine, store_answers
+from .compare import compare
+from .db import Assessment, Organisation, catalog_from_db, load_core, make_engine, retake, store_answers, versions
 from .engine import AnswerError, Engine
 from .model import load_risk_model, load_targets
 from .questions import load_bank
-from .workbook import build_workbook
+from .workbook import Progress, build_workbook
 
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
@@ -45,6 +47,11 @@ class AnswersIn(BaseModel):
     answers: list[AnswerIn]
 
 
+class RetakeIn(BaseModel):
+    profile: dict[str, bool] | None = None
+    copy_answers: bool = True
+
+
 def _hash(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
@@ -60,7 +67,7 @@ def create_app(database_url: str) -> FastAPI:
     app = FastAPI(
         title="csfcheck",
         description="NIST CSF 2.0 self-assessment for small non-profits",
-        version="0.2.0",
+        version="0.3.0",
     )
     app.state.engine = engine
     app.state.db = db
@@ -81,9 +88,14 @@ def create_app(database_url: str) -> FastAPI:
         return a
 
     def state(a: Assessment):
-        answers = {r.question_id: r.value for r in a.answers}
-        evidence = {r.question_id: r.evidence for r in a.answers if r.evidence}
-        return a.organisation.profile, answers, evidence
+        return a.answer_state()
+
+    def previous_of(s: Session, a: Assessment, other: int | None) -> Assessment:
+        """The version to compare ``a`` with: ``other`` if given, else the one it was retaken from."""
+        b = s.get(Assessment, other if other is not None else a.previous_id) if (other or a.previous_id) else None
+        if b is None or b.organisation_id != a.organisation_id or b.token_hash != a.token_hash:
+            raise HTTPException(404, "no earlier version of this assessment to compare with")
+        return b
 
     def question_json(q):
         return {
@@ -120,11 +132,62 @@ def create_app(database_url: str) -> FastAPI:
         if org is None:
             raise HTTPException(404, "organisation not found")
         token = secrets.token_urlsafe(24)
-        a = Assessment(organisation_id=org.id, token_hash=_hash(token))
+        a = Assessment(organisation_id=org.id, token_hash=_hash(token), version=1, profile=org.profile)
         s.add(a)
         s.commit()
         total = len(engine.bank.applicable(org.profile))
-        return {"id": a.id, "token": token, "questions_for_profile": total}
+        return {"id": a.id, "version": a.version, "token": token, "questions_for_profile": total}
+
+    @app.post("/assessments/{assessment_id}/retake", status_code=201)
+    def retake_assessment(body: RetakeIn | None = None, a: Assessment = Depends(assessment),
+                          s: Session = Depends(session)):
+        body = body or RetakeIn()
+        a = s.merge(a)
+        try:
+            new = retake(engine, s, a, body.profile, body.copy_answers)
+        except KeyError as exc:
+            raise HTTPException(422, str(exc.args[0])) from None
+        s.commit()
+        return {
+            "id": new.id,
+            "version": new.version,
+            "previous_id": a.id,
+            "answers_copied": len(new.answers),
+            "questions_for_profile": len(engine.bank.applicable(new.effective_profile)),
+        }
+
+    @app.get("/assessments/{assessment_id}/versions")
+    def list_versions(a: Assessment = Depends(assessment), s: Session = Depends(session)):
+        out = []
+        for v in versions(s, a):
+            profile, answers, _ = state(v)
+            result = engine.assess(profile, answers)
+            t = result.totals
+            out.append({
+                "id": v.id, "version": v.version, "previous_id": v.previous_id, "complete": result.complete,
+                "answered": len(answers), "subcategories_at_target": t["subcategories_at_target"],
+                "total_risk": t["total_risk"], "actions": len(result.actions),
+            })
+        return {"organisation": a.organisation.name, "versions": out}
+
+    @app.get("/assessments/{assessment_id}/compare")
+    def compare_versions(other: int | None = Query(None, alias="with"), a: Assessment = Depends(assessment),
+                         s: Session = Depends(session)):
+        a = s.merge(a)
+        b = previous_of(s, a, other)
+        p_old, ans_old, _ = state(b)
+        p_new, ans_new, _ = state(a)
+        c = compare(engine, engine.assess(p_old, ans_old), engine.assess(p_new, ans_new), ans_old, ans_new)
+        return {
+            "before": {"id": b.id, "version": b.version},
+            "after": {"id": a.id, "version": a.version},
+            "totals": c.totals,
+            "profile_changes": {k: {"before": v[0], "after": v[1]} for k, v in c.profile_changes.items()},
+            "functions": [asdict(f) for f in c.functions],
+            "subcategories": [asdict(x) for x in c.subcategories if x.change != "unchanged"],
+            "actions": [asdict(x) for x in c.actions],
+            "answers": [asdict(x) for x in c.answers],
+        }
 
     @app.get("/assessments/{assessment_id}/next")
     def next_questions(limit: int = Query(5, ge=1, le=100), a: Assessment = Depends(assessment)):
@@ -156,6 +219,7 @@ def create_app(database_url: str) -> FastAPI:
         prof, answers, _ = state(a)
         result = engine.assess(prof, answers)
         return {
+            "version": a.version,
             "complete": result.complete,
             "totals": result.totals,
             "subcategories": [asdict(r) for r in result.subcategories],
@@ -169,11 +233,18 @@ def create_app(database_url: str) -> FastAPI:
         return {"complete": result.complete, "actions": [asdict(x) for x in actions]}
 
     @app.get("/assessments/{assessment_id}/workbook")
-    def workbook(a: Assessment = Depends(assessment)):
+    def workbook(a: Assessment = Depends(assessment), s: Session = Depends(session)):
+        a = s.merge(a)
         prof, answers, evidence = state(a)
         result = engine.assess(prof, answers)
+        progress = None
+        if a.previous_id is not None:
+            b = previous_of(s, a, None)
+            p_old, ans_old, _ = state(b)
+            progress = Progress(compare(engine, engine.assess(p_old, ans_old), result, ans_old, answers),
+                                f"version {b.version}", f"version {a.version}")
         buf = io.BytesIO()
-        build_workbook(engine, result, answers, evidence, a.organisation.name).save(buf)
+        build_workbook(engine, result, answers, evidence, a.organisation.name, progress=progress).save(buf)
         buf.seek(0)
         name = f"csf-assessment-{a.id}.xlsx"
         return StreamingResponse(buf, media_type=XLSX, headers={"Content-Disposition": f'attachment; filename="{name}"'})
