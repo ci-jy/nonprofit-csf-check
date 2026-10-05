@@ -3,7 +3,8 @@
 The pages use the same engine and tables as the JSON API. Starting an
 assessment sets its token in an HttpOnly cookie scoped to that assessment's
 pages, and the token is shown once so the assessment can be resumed from
-another browser. There are no user accounts.
+another browser. There are no user accounts. A retake keeps the token, so the
+same code opens every version and the progress page between them.
 """
 
 from __future__ import annotations
@@ -21,12 +22,14 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.engine import Engine as SAEngine
 from sqlalchemy.orm import Session
 
-from .db import Assessment, Organisation, store_answers
+from .compare import compare
+from .compare import summary_points as progress_points
+from .db import Assessment, Organisation, retake, store_answers, versions
 from .engine import ASKED, SKIPPED_FOLLOW_UP, SKIPPED_PROFILE, AnswerError, Engine
 from .heatmap import render_svg
 from .report import build_report, summary_points
 from .rollup import by_function
-from .workbook import build_workbook
+from .workbook import Progress, build_workbook
 
 HERE = Path(__file__).parent
 DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -100,6 +103,27 @@ def build_router(engine: Engine, db: SAEngine, token_hash) -> APIRouter:
                                      len(qs) - len(asked)))
         return status, views
 
+    def previous_of(s: Session, a: Assessment) -> Assessment | None:
+        b = s.get(Assessment, a.previous_id) if a.previous_id else None
+        if b is None or b.organisation_id != a.organisation_id or b.token_hash != a.token_hash:
+            return None
+        return b
+
+    def progress_for(s: Session, a: Assessment, result=None) -> Progress | None:
+        """This version against the one it was retaken from, if any."""
+        b = previous_of(s, a)
+        if b is None:
+            return None
+        p_old, ans_old, _ = state(b)
+        p_new, ans_new, _ = state(a)
+        result = result or engine.assess(p_new, ans_new)
+        return Progress(compare(engine, engine.assess(p_old, ans_old), result, ans_old, ans_new),
+                        f"version {b.version}", f"version {a.version}")
+
+    def set_token(resp, assessment_id: int, token: str) -> None:
+        resp.set_cookie(cookie_name(assessment_id), token, path=f"/a/{assessment_id}", httponly=True,
+                        samesite="lax")
+
     def render(request: Request, name: str, status_code: int = 200, **ctx) -> HTMLResponse:
         return templates.TemplateResponse(request, name, ctx, status_code=status_code)
 
@@ -145,7 +169,7 @@ def build_router(engine: Engine, db: SAEngine, token_hash) -> APIRouter:
         s.add(a)
         s.commit()
         resp = RedirectResponse(f"/a/{a.id}?new=1", status_code=303)
-        resp.set_cookie(cookie_name(a.id), token, path=f"/a/{a.id}", httponly=True, samesite="lax")
+        set_token(resp, a.id, token)
         # Shown once on the overview page, then forgotten.
         resp.set_cookie(f"csfcheck_show_{a.id}", token, path=f"/a/{a.id}", httponly=True, samesite="lax",
                         max_age=60)
@@ -160,16 +184,18 @@ def build_router(engine: Engine, db: SAEngine, token_hash) -> APIRouter:
                           subcategories=len(engine.catalog.subcategories),
                           error="No assessment matches that number and code.")
         resp = RedirectResponse(f"/a/{a.id}", status_code=303)
-        resp.set_cookie(cookie_name(a.id), token.strip(), path=f"/a/{a.id}", httponly=True, samesite="lax")
+        for v in versions(s, a):  # the code opens every version of this assessment
+            set_token(resp, v.id, token.strip())
         return resp
 
     @router.get("/a/{assessment_id}", response_class=HTMLResponse)
-    def overview(request: Request, a: Assessment = Depends(assessment)):
+    def overview(request: Request, a: Assessment = Depends(assessment), s: Session = Depends(session)):
         profile, answers, _ = state(a)
         _, views = progress(profile, answers)
         token = request.cookies.get(f"csfcheck_show_{a.id}")
         resp = page(request, a, "overview.html", token=token, resume_at=next_section(views, None),
-                    flags={f: bank.flags[f] for f, on in profile.items() if on})
+                    flags={f: bank.flags[f] for f, on in profile.items() if on}, versions=versions(s, a),
+                    copied=request.query_params.get("retake") == "1")
         if token:
             resp.delete_cookie(f"csfcheck_show_{a.id}", path=f"/a/{a.id}")
         return resp
@@ -253,6 +279,31 @@ def build_router(engine: Engine, db: SAEngine, token_hash) -> APIRouter:
             return RedirectResponse(f"/a/{a.id}/heatmap", status_code=303)
         return RedirectResponse(f"/a/{a.id}/s/{target}", status_code=303)
 
+    @router.get("/a/{assessment_id}/retake", response_class=HTMLResponse)
+    def retake_form(request: Request, a: Assessment = Depends(assessment)):
+        return page(request, a, "retake.html", flags=bank.flags, profile=a.effective_profile)
+
+    @router.post("/a/{assessment_id}/retake")
+    async def retake_post(request: Request, a: Assessment = Depends(assessment), s: Session = Depends(session)):
+        form = await request.form()
+        a = s.merge(a)
+        profile = {f: form.get(f) == "on" for f in bank.flags}
+        new = retake(engine, s, a, profile, copy_answers=form.get("copy") == "on")
+        s.commit()
+        resp = RedirectResponse(f"/a/{new.id}?retake=1", status_code=303)
+        set_token(resp, new.id, request.cookies[cookie_name(a.id)])
+        return resp
+
+    @router.get("/a/{assessment_id}/progress", response_class=HTMLResponse)
+    def progress_page(request: Request, a: Assessment = Depends(assessment), s: Session = Depends(session)):
+        p = progress_for(s, a)
+        if p is None:
+            return RedirectResponse(f"/a/{a.id}", status_code=303)
+        c = p.comparison
+        return page(request, a, "progress.html", progress=p, c=c, points=progress_points(c, p.before),
+                    changed=[x for x in c.subcategories if x.change != "unchanged"],
+                    moved=[x for x in c.actions if x.status != "still open"])
+
     def results(a: Assessment):
         profile, answers, evidence = state(a)
         return engine.assess(profile, answers), answers, evidence
@@ -281,17 +332,19 @@ def build_router(engine: Engine, db: SAEngine, token_hash) -> APIRouter:
                                  headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
     @router.get("/a/{assessment_id}/report.docx")
-    def report(a: Assessment = Depends(assessment)):
+    def report(a: Assessment = Depends(assessment), s: Session = Depends(session)):
         result, answers, evidence = results(a)
         buf = io.BytesIO()
-        build_report(engine, result, answers, evidence, a.organisation.name).save(buf)
+        build_report(engine, result, answers, evidence, a.organisation.name,
+                     progress=progress_for(s, a, result)).save(buf)
         return download(buf, DOCX, f"csf-findings-{a.id}.docx")
 
     @router.get("/a/{assessment_id}/workbook.xlsx")
-    def workbook(a: Assessment = Depends(assessment)):
+    def workbook(a: Assessment = Depends(assessment), s: Session = Depends(session)):
         result, answers, evidence = results(a)
         buf = io.BytesIO()
-        build_workbook(engine, result, answers, evidence, a.organisation.name).save(buf)
+        build_workbook(engine, result, answers, evidence, a.organisation.name,
+                       progress=progress_for(s, a, result)).save(buf)
         return download(buf, XLSX, f"csf-assessment-{a.id}.xlsx")
 
     return router

@@ -8,6 +8,12 @@
   This browser remembers it, but it is only shown once.
 </div>
 {% endif %}
+{% if copied %}
+<div class="notice">
+  <strong>Version {{ a.version }} started.</strong> Your earlier answers are filled in, so go through each section and
+  change what is different now. Questions your new profile adds are blank.
+</div>
+{% endif %}
 <h1>{{ org.name }}</h1>
 <p class="muted">What you told us about the organisation:</p>
 <ul class="flags">
@@ -38,5 +44,21 @@
   <a class="button secondary" href="/a/{{ a.id }}/report.docx">Word report</a>
   <a class="button secondary" href="/a/{{ a.id }}/workbook.xlsx">Excel workbook</a>
 </p>
+{% if versions | length > 1 %}
+<h2>Versions</h2>
+<table class="sections">
+  <thead><tr><th>Version</th><th>Started</th><th></th></tr></thead>
+  <tbody>
+  {% for v in versions %}
+  <tr class="{{ 'done' if v.id == a.id else '' }}">
+    <td>{% if v.id == a.id %}Version {{ v.version }} (this one){% else %}<a href="/a/{{ v.id }}">Version {{ v.version }}</a>{% endif %}</td>
+    <td>{{ v.created_at.strftime('%d %b %Y') if v.created_at else '' }}</td>
+    <td>{% if v.previous_id %}<a href="/a/{{ v.id }}/progress">what changed</a>{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+<p class="muted">Done some of the actions? <a href="/a/{{ a.id }}/retake">Retake the assessment</a> to start a new version from these answers and see what improved.</p>
 {% if answered < asked %}<p class="muted">You can open the results at any time; unanswered questions count as 0 until you answer them.</p>{% endif %}
 {% endblock %}

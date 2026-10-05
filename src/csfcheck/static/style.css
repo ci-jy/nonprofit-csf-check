@@ -80,3 +80,5 @@ tr.done td:first-child a { color: var(--ok); }
 .flags { color: var(--muted); }
 
 footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 2rem 1rem; }
+.change { padding: .1rem .45rem; border-radius: 4px; white-space: nowrap; font-size: .9rem; background: #eef0f4; }
+.change.up { background: #c6efce; } .change.down { background: #f8cbad; }

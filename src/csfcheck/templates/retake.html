@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Retake{% endblock %}
+{% block body %}
+<h1>Retake the assessment</h1>
+<p>This starts version {{ a.version + 1 }} for {{ org.name }}. Version {{ a.version }} stays as it is, so you can compare
+the two afterwards. The same resume code opens both.</p>
+
+<form method="post" action="/a/{{ a.id }}/retake" class="card">
+  <fieldset>
+    <legend>Is this still true? Change anything that is different now</legend>
+    {% for flag, text in flags.items() %}
+    <label class="check"><input type="checkbox" name="{{ flag }}"{% if profile.get(flag) %} checked{% endif %}> {{ text }}</label>
+    {% endfor %}
+  </fieldset>
+  <label class="check"><input type="checkbox" name="copy" checked> Start from the answers and evidence of version {{ a.version }}</label>
+  <button type="submit">Start version {{ a.version + 1 }}</button>
+</form>
+{% endblock %}

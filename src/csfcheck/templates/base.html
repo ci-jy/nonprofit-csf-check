@@ -16,12 +16,13 @@
     <a href="/a/{{ a.id }}/questions">Questions</a>
     <a href="/a/{{ a.id }}/heatmap">Heat map</a>
     <a href="/a/{{ a.id }}/plan">Action plan</a>
+    {% if a.previous_id %}<a href="/a/{{ a.id }}/progress">Progress</a>{% endif %}
   </nav>
   {% endif %}
 </header>
 {% if a is defined %}
 <div class="progress-wrap">
-  <div class="org">{{ org.name }}</div>
+  <div class="org">{{ org.name }}{% if a.version > 1 %} <small>· version {{ a.version }}</small>{% endif %}</div>
   <div class="progress" role="progressbar" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
     <div class="bar" style="width: {{ pct }}%"></div>
   </div>

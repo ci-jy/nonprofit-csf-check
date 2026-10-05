@@ -164,3 +164,44 @@ def test_pages_need_the_assessment_cookie(app, client):
         assert other.get(f"/a/{aid}/heatmap").status_code == 200
     # The resume code is shown once only.
     assert '<code class="token">' not in client.get(f"/a/{aid}").text
+
+
+def test_retake_and_progress_page(app, client):
+    root = SAMPLES[0].parent
+    old = json.loads((root / "food_bank.json").read_text())
+    new = json.loads((root / "retakes" / "food_bank.json").read_text())
+    aid, first = start(client, old["organisation"]["name"], old["organisation"]["profile"])
+    token = re.search(r'<code class="token">([^<]+)</code>', first.text).group(1)
+    form = lambda answers: {f"q_{q}": v for q, v in answers.items()}  # noqa: E731
+    assert client.post(f"/a/{aid}/s/govern", data=form(old["answers"])).status_code == 200
+    assert client.get(f"/a/{aid}/progress", follow_redirects=False).status_code == 303  # nothing to compare yet
+
+    page = client.get(f"/a/{aid}/retake").text
+    assert 'name="has_office" checked' in page and 'name="remote_staff">' in page
+    flags = {f: "on" for f, on in new["organisation"]["profile"].items() if on}
+    r = client.post(f"/a/{aid}/retake", data={**flags, "copy": "on"})
+    assert r.status_code == 200 and "Version 2 started" in r.text
+    v2 = int(re.search(r"/a/(\d+)", str(r.url)).group(1))
+    assert v2 != aid
+    # Everything but the new remote-working questions is already answered.
+    assert re.search(r"(\d+) of (\d+) questions answered", r.text).groups() == ("86", "88")
+
+    changed = {q: v for q, v in new["answers"].items() if old["answers"].get(q) != v}
+    client.post(f"/a/{v2}/s/govern", data=form(changed))
+    progress = client.get(f"/a/{v2}/progress")
+    assert progress.status_code == 200
+    assert "went from 27% to 34% of its target profile" in progress.text
+    assert "4 completed, 14 moved forward" in progress.text
+    assert "remote staff (now yes)" in progress.text
+
+    wb = load_workbook(io.BytesIO(client.get(f"/a/{v2}/workbook.xlsx").content))
+    assert wb["Progress"]["B1"].value == "version 2 with version 1"
+    doc = Document(io.BytesIO(client.get(f"/a/{v2}/report.docx").content))
+    assert any(p.text == "Progress since version 1" for p in doc.paragraphs)
+
+    # Version 1 is unchanged, and the one resume code opens both versions in another browser.
+    assert "86 of 86 questions answered" in client.get(f"/a/{aid}").text
+    with TestClient(app) as other:
+        assert other.post("/resume", data={"assessment_id": aid, "token": token}).status_code == 200
+        assert other.get(f"/a/{v2}/progress").status_code == 200
+        assert "what changed" in other.get(f"/a/{aid}").text

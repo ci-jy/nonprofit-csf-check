@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Progress{% endblock %}
+{% block body %}
+<h1>What changed since {{ progress.before }}</h1>
+<ul class="summary">
+  {% for p in points %}<li>{{ p }}</li>{% endfor %}
+</ul>
+
+<h2>Share of target reached, by function</h2>
+<table class="data">
+  <thead><tr><th>Function</th><th>{{ progress.before | capitalize }}</th><th>{{ progress.after | capitalize }}</th><th>Change</th><th>At target</th></tr></thead>
+  <tbody>
+  {% for f in c.functions %}
+  <tr><td>{{ f.id }} {{ f.title | capitalize }}</td>
+  {% if f.before is none or f.after is none %}<td colspan="3">not applicable</td>{% else %}
+  {% set d = (100 * f.after) | round | int - (100 * f.before) | round | int %}
+  <td>{{ (100 * f.before) | round | int }}%</td><td>{{ (100 * f.after) | round | int }}%</td>
+  <td><span class="change {{ 'up' if d > 0 else 'down' if d < 0 else '' }}">{{ '%+d' | format(d) }}</span></td>{% endif %}
+  <td>{{ f.at_target_before }} → {{ f.at_target_after }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Outcomes that changed <small>({{ changed | length }})</small></h2>
+{% if changed %}
+<table class="data">
+  <thead><tr><th>Outcome</th><th></th><th>Before</th><th>Now</th><th>Target</th></tr></thead>
+  <tbody>
+  {% for x in changed %}
+  <tr><td><code>{{ x.id }}</code> {{ x.outcome }}</td>
+  <td><span class="change {{ 'up' if x.change in ('improved',) else 'down' if x.change == 'regressed' else '' }}">{{ x.change }}</span></td>
+  <td>{{ '%.2f' | format(x.before) if x.before is not none else '–' }}</td>
+  <td>{{ '%.2f' | format(x.after) if x.after is not none else '–' }}</td><td>{{ x.target }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}<p>No outcome scores changed.</p>{% endif %}
+
+<h2>Actions <small>({{ c.totals.actions_completed }} completed, {{ c.totals.actions_progressed }} moved forward, {{ c.totals.actions_still_open }} unchanged)</small></h2>
+{% if moved %}
+<table class="data plan">
+  <thead><tr><th>Status</th><th>Outcome</th><th>What to do</th><th>Rank before</th><th>Rank now</th></tr></thead>
+  <tbody>
+  {% for x in moved %}
+  <tr><td><span class="change {{ 'up' if x.status in ('completed', 'progressed') else 'down' if x.status == 'new' else '' }}">{{ x.status }}</span></td>
+  <td><code>{{ x.subcategory }}</code></td><td>{{ x.what_to_do }}</td>
+  <td>{{ x.rank_before or '–' }}</td><td>{{ x.rank_after or '–' }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}<p>No action has moved yet.</p>{% endif %}
+
+{% if c.answers %}
+<details><summary>{{ c.answers | length }} answers changed</summary>
+<table class="data">
+  <thead><tr><th>Question</th><th>Before</th><th>Now</th></tr></thead>
+  <tbody>
+  {% for x in c.answers %}
+  <tr><td>{{ x.text }}</td><td>{{ x.before or 'not asked' }}</td><td>{{ x.after or 'not asked' }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</details>
+{% endif %}
+
+<p class="actions">
+  <a class="button" href="/a/{{ a.id }}/plan">See the current action plan</a>
+  <a class="button secondary" href="/a/{{ a.id }}/workbook.xlsx">Workbook with the Progress sheet</a>
+  <a class="button secondary" href="/a/{{ a.id }}/report.docx">Word report</a>
+</p>
+{% endblock %}
