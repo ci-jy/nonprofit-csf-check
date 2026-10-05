@@ -67,6 +67,14 @@ def _table(doc, headers, rows, widths=None):
     return table
 
 
+def _keep_together(table) -> None:
+    """Ask Word and LibreOffice not to split a short table across pages."""
+    for row in table.rows[:-1]:
+        for cell in row.cells:
+            for p in cell.paragraphs:
+                p.paragraph_format.keep_with_next = True
+
+
 def _pct(x: float | None) -> str:
     return "n/a" if x is None else f"{round(100 * x)}%"
 
@@ -144,7 +152,8 @@ def build_report(
             change = (None if f.before is None or f.after is None
                       else f"{round(100 * f.after) - round(100 * f.before):+d} points")
             rows.append((f.title.capitalize(), _pct(f.before), _pct(f.after), change))
-        _table(doc, PROGRESS_HEADERS, rows, widths=(4, 3, 3, 3))
+        doc.add_paragraph("Share of the target reached, by function:").paragraph_format.keep_with_next = True
+        _keep_together(_table(doc, PROGRESS_HEADERS, rows, widths=(4, 3, 3, 3)))
         done = c.actions_with(COMPLETED)
         if done:
             doc.add_paragraph("Actions completed since then:")

@@ -37,11 +37,11 @@ EVIDENCE_HEADERS = (
 
 PROGRESS_FUNCTION_HEADERS = ("Function", "Target reached before", "Target reached now", "Change",
                              "At target before", "At target now")
-PROGRESS_SUBCATEGORY_HEADERS = ("Subcategory", "Function", "Outcome", "Change", "Current before", "Current now",
-                                "Target", "Risk before", "Risk now")
+PROGRESS_SUBCATEGORY_HEADERS = ("Subcategory", "Outcome", "Change", "Current before", "Current now", "Target",
+                                "Risk before", "Risk now")
 PROGRESS_ACTION_HEADERS = ("Subcategory", "Action", "Status", "Rank before", "Rank now", "Gap before", "Gap now",
                            "Cost band")
-PROGRESS_ANSWER_HEADERS = ("Question", "Section", "Question text", "Answer before", "Answer now")
+PROGRESS_ANSWER_HEADERS = ("Question", "Question text", "Answer before", "Answer now", "Section")
 
 CHANGE_FILLS = {
     "improved": PatternFill("solid", fgColor="C6EFCE"),
@@ -116,7 +116,8 @@ def _pct(x: float | None):
 def _progress_sheet(wb: Workbook, engine: Engine, result: Result, organisation: str,
                     progress: Progress | None) -> None:
     ws = wb.create_sheet("Progress")
-    for col, width in zip("ABCDEFGHI", (16, 60, 16, 14, 14, 14, 10, 11, 11)):
+    # Every table puts its long text in column B, so B is the wide one.
+    for col, width in zip("ABCDEFGH", (26, 62, 18, 18, 16, 12, 12, 12)):
         ws.column_dimensions[col].width = width
     if progress is None:
         ws.append(["Progress", f"This is the first assessment of {organisation}, so there is nothing to compare "
@@ -150,7 +151,7 @@ def _progress_sheet(wb: Workbook, engine: Engine, result: Result, organisation: 
     for label, value in rows:
         ws.append([label, value])
         ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
-        ws.cell(row=ws.max_row, column=2).alignment = WRAP
+        ws.cell(row=ws.max_row, column=2).alignment = Alignment(wrap_text=True, vertical="top", horizontal="left")
 
     _title_row(ws, "By function (share of target reached, %)")
     _header_row(ws, PROGRESS_FUNCTION_HEADERS)
@@ -164,9 +165,8 @@ def _progress_sheet(wb: Workbook, engine: Engine, result: Result, organisation: 
     for x in c.subcategories:
         if x.change == "unchanged":
             continue
-        ws.append([x.id, x.function, x.outcome, x.change, x.before, x.after, x.target, x.risk_before,
-                   x.risk_after])
-        _fill(ws, 4, x.change)
+        ws.append([x.id, x.outcome, x.change, x.before, x.after, x.target, x.risk_before, x.risk_after])
+        _fill(ws, 3, x.change)
 
     _title_row(ws, f"Actions from the earlier plan, and new ones ({t['actions_still_open']} still open "
                    "with no change are left out)")
@@ -181,7 +181,7 @@ def _progress_sheet(wb: Workbook, engine: Engine, result: Result, organisation: 
     _title_row(ws, "Answers that changed")
     _header_row(ws, PROGRESS_ANSWER_HEADERS)
     for x in c.answers:
-        ws.append([x.question_id, x.section, x.text, x.before or "(not asked)", x.after or "(not asked)"])
+        ws.append([x.question_id, x.text, x.before or "(not asked)", x.after or "(not asked)", x.section])
     for row in ws.iter_rows(min_row=2):
         for cell in row:
             if cell.alignment is None or not cell.alignment.wrap_text:

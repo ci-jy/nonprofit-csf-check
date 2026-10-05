@@ -94,7 +94,7 @@ def test_export_with_previous_writes_the_progress_sheet(tmp_path):
     functions = {r[0]: r for r in table(PROGRESS_FUNCTION_HEADERS)}
     assert functions["Respond"][1:4] == (10, 32, 22)
     subs = table(PROGRESS_SUBCATEGORY_HEADERS)
-    assert len(subs) == 21 and {r[3] for r in subs} == {"improved", "regressed"}
+    assert len(subs) == 21 and {r[2] for r in subs} == {"improved", "regressed"}
     actions = table(PROGRESS_ACTION_HEADERS)
     assert [r[2] for r in actions].count("completed") == 4
     assert [r[2] for r in actions][:4] == ["completed"] * 4  # done ones first
