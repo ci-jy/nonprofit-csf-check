@@ -1,0 +1,42 @@
+# PostgreSQL and the csfcheck app. Start with `docker compose up --build`,
+# then open http://127.0.0.1:23180/ (or the port in CSFCHECK_PORT).
+name: csfcheck
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: csfcheck
+      POSTGRES_PASSWORD: ${CSFCHECK_DB_PASSWORD:-csfcheck}
+      POSTGRES_DB: csfcheck
+    command: ["postgres", "-c", "shared_buffers=32MB"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U csfcheck -d csfcheck"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    mem_limit: 256m
+    restart: unless-stopped
+
+  app:
+    build: .
+    image: csfcheck:0.3.0
+    environment:
+      CSFCHECK_DATABASE_URL: postgresql+psycopg://csfcheck:${CSFCHECK_DB_PASSWORD:-csfcheck}@db:5432/csfcheck
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${CSFCHECK_PORT:-23180}:23180"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:23180/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    mem_limit: 384m
+    restart: unless-stopped
+
+volumes:
+  pgdata:
