@@ -4,7 +4,14 @@ import sys
 import pytest
 from docx import Document
 
-from csfcheck.report import ACTION_HEADERS, CATEGORY_HEADERS, PROFILE_HEADERS, TOP_ACTIONS, build_report
+from csfcheck.report import (
+    ACTION_HEADERS,
+    CATEGORY_HEADERS,
+    PROFILE_HEADERS,
+    PROGRESS_HEADERS,
+    TOP_ACTIONS,
+    build_report,
+)
 from csfcheck.samples import load_answers
 
 from .conftest import ROOT, SAMPLES
@@ -87,3 +94,23 @@ def test_cli_report(tmp_path):
     assert proc.returncode == 0, proc.stderr
     assert "wrote" in proc.stdout
     assert len(Document(out).tables[2].rows) == 6
+
+
+def test_report_with_previous_has_a_progress_section(tmp_path):
+    out = tmp_path / "food_bank_v2.docx"
+    proc = subprocess.run(
+        [sys.executable, "-m", "csfcheck", "report", "samples/retakes/food_bank.json",
+         "--previous", "samples/food_bank.json", "-o", str(out)],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    doc = Document(out)
+    headings = [p.text for p in doc.paragraphs if p.style.name.startswith("Heading")]
+    assert headings[:3] == ["Executive summary", "Progress since the earlier assessment (food_bank.json)",
+                            "Profile by function"]
+    progress = doc.tables[0]
+    assert cells(progress)[0] == list(PROGRESS_HEADERS)
+    assert cells(progress)[5] == ["Respond", "10%", "32%", "+22 points"]
+    text = "\n".join(p.text for p in doc.paragraphs)
+    assert "from 27% to 34% of its target profile" in text
+    assert "Went backwards: GV.RR-02, PR.AA-05, PR.DS-01." in text

@@ -17,21 +17,52 @@ def _engine():
     return Engine.default()
 
 
-def cmd_export(args) -> int:
+def _load_checked(engine, path: Path):
+    """Read and score an answers file; None (after printing why) if it doesn't fit the bank."""
     from .engine import AnswerError
     from .samples import load_answers
-    from .workbook import export_workbook
 
-    engine = _engine()
-    org = load_answers(args.answers)
+    org = load_answers(path)
     profile = engine.bank.normalise_profile(org.profile)
     try:
         engine.check_answers(profile, org.answers)
     except AnswerError as exc:
-        print(f"error: {exc}", file=sys.stderr)
+        print(f"error: {path}: {exc}", file=sys.stderr)
+        return None, None
+    return org, engine.assess(profile, org.answers)
+
+
+def _progress(engine, args, org, result):
+    """The comparison with ``--previous``, or None. Returns False if that file is bad."""
+    from .compare import compare
+    from .workbook import Progress
+
+    if not args.previous:
+        return None
+    old, old_result = _load_checked(engine, args.previous)
+    if old is None:
+        return False
+    c = compare(engine, old_result, result, old.answers, org.answers)
+    t = c.totals
+    print(
+        f"since {args.previous.name}: {t['improved']} subcategories improved, {t['regressed']} regressed, "
+        f"{t['actions_completed']} of {t['actions_before']} actions completed, "
+        f"target reached {round(100 * t['attainment_before'])}% -> {round(100 * t['attainment_after'])}%"
+    )
+    return Progress(c, f"the earlier assessment ({args.previous.name})", "this assessment")
+
+
+def cmd_export(args) -> int:
+    from .workbook import export_workbook
+
+    engine = _engine()
+    org, result = _load_checked(engine, args.answers)
+    if org is None:
         return 2
-    result = engine.assess(profile, org.answers)
-    out = export_workbook(args.output, engine, result, org.answers, org.evidence, org.name)
+    progress = _progress(engine, args, org, result)
+    if progress is False:
+        return 2
+    out = export_workbook(args.output, engine, result, org.answers, org.evidence, org.name, progress=progress)
     t = result.totals
     print(
         f"{org.name}: asked {t['questions_asked']} of {t['questions_in_bank']} questions "
@@ -45,20 +76,17 @@ def cmd_export(args) -> int:
 
 
 def cmd_report(args) -> int:
-    from .engine import AnswerError
     from .report import export_report
-    from .samples import load_answers
 
     engine = _engine()
-    org = load_answers(args.answers)
-    profile = engine.bank.normalise_profile(org.profile)
-    try:
-        engine.check_answers(profile, org.answers)
-    except AnswerError as exc:
-        print(f"error: {exc}", file=sys.stderr)
+    org, result = _load_checked(engine, args.answers)
+    if org is None:
         return 2
-    result = engine.assess(profile, org.answers)
-    out = export_report(args.output, engine, result, org.answers, org.evidence, org.name, top=args.top)
+    progress = _progress(engine, args, org, result)
+    if progress is False:
+        return 2
+    out = export_report(args.output, engine, result, org.answers, org.evidence, org.name, top=args.top,
+                        progress=progress)
     t = result.totals
     print(
         f"{org.name}: {t['subcategories_at_target']} of {t['subcategories_assessed']} subcategories at target, "
@@ -156,6 +184,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("answers", type=Path)
     p.add_argument("-o", "--output", type=Path, required=True)
     p.add_argument("--top", type=int, default=5, help="actions to print (default 5)")
+    p.add_argument("--previous", type=Path, help="an earlier answers file to compare with (Progress sheet)")
     p.add_argument("--allow-incomplete", action="store_true")
     p.set_defaults(func=cmd_export)
 
@@ -163,6 +192,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("answers", type=Path)
     p.add_argument("-o", "--output", type=Path, required=True)
     p.add_argument("--top", type=int, default=10, help="actions in the report (default 10)")
+    p.add_argument("--previous", type=Path, help="an earlier answers file to compare with")
     p.add_argument("--allow-incomplete", action="store_true")
     p.set_defaults(func=cmd_report)
 

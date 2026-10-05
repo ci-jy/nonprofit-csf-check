@@ -16,6 +16,8 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
+from .compare import COMPLETED
+from .compare import summary_points as progress_points
 from .engine import Engine, Result
 from .heatmap import NOT_APPLICABLE, attainment_colour
 from .rollup import by_category, by_function
@@ -23,6 +25,7 @@ from .rollup import by_category, by_function
 TOP_ACTIONS = 10
 PROFILE_HEADERS = ("Function", "Subcategories assessed", "At target", "Current (0-3)", "Target (0-3)", "Target reached")
 CATEGORY_HEADERS = ("Category", "Current", "Target", "Reached", "Worst gap rating")
+PROGRESS_HEADERS = ("Function", "Reached before", "Reached now", "Change")
 ACTION_HEADERS = ("Rank", "CSF ID", "What to do", "Cost", "Risk now", "Reduced by")
 RATING_COLOURS = {"Low": "C6EFCE", "Medium": "FFEB9C", "High": "F8CBAD", "Critical": "FF7C80"}
 
@@ -107,7 +110,9 @@ def build_report(
     evidence: Mapping[str, str] | None = None,
     organisation: str = "Organisation",
     top: int = TOP_ACTIONS,
+    progress=None,
 ):
+    """The board's report; ``progress`` (a ``workbook.Progress``) adds a section on what changed."""
     evidence = evidence or {}
     cat = engine.catalog
     doc = Document()
@@ -128,6 +133,29 @@ def build_report(
         doc.add_paragraph("Start with these:")
         for a in result.actions[:5]:
             doc.add_paragraph(f"{a.what_to_do} ({a.subcategory}; {a.cost_label})", style="List Number")
+
+    if progress is not None:
+        c = progress.comparison
+        doc.add_heading(f"Progress since {progress.before}", level=1)
+        for point in progress_points(c, progress.before):
+            doc.add_paragraph(point, style="List Bullet")
+        rows = []
+        for f in c.functions:
+            change = (None if f.before is None or f.after is None
+                      else f"{round(100 * f.after) - round(100 * f.before):+d} points")
+            rows.append((f.title.capitalize(), _pct(f.before), _pct(f.after), change))
+        _table(doc, PROGRESS_HEADERS, rows, widths=(4, 3, 3, 3))
+        done = c.actions_with(COMPLETED)
+        if done:
+            doc.add_paragraph("Actions completed since then:")
+            for a in done:
+                doc.add_paragraph(f"{a.what_to_do} ({a.subcategory})", style="List Bullet")
+        backwards = c.by_change("regressed")
+        if backwards:
+            doc.add_paragraph(
+                "Went backwards: " + ", ".join(x.id for x in backwards) + ". The Progress sheet of the "
+                "workbook lists the answers behind each change."
+            )
 
     doc.add_heading("Profile by function", level=1)
     rows = []
