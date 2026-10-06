@@ -15,6 +15,8 @@ The pages are server-rendered with Jinja templates (`src/csfcheck/templates/`) a
 | `/a/{id}/plan` | The ranked action plan grouped into Now (top 5), Next (6-15) and Later |
 | `/a/{id}/report.docx` | Word findings report |
 | `/a/{id}/workbook.xlsx` | The same Excel workbook as `csfcheck export` |
+| `/a/{id}/retake` | Start the next version: confirm the profile flags and whether to copy the answers |
+| `/a/{id}/progress` | What changed since the version this one was retaken from |
 
 ## Navigation
 
@@ -27,6 +29,16 @@ You can leave questions blank and look at the results at any time. Unanswered qu
 ## The token
 
 Starting an assessment creates a random token and stores only its SHA-256, as the API does. The browser gets the token in an HttpOnly, SameSite=Lax cookie whose path is that assessment's pages (`/a/{id}`). The overview shows it once as a resume code, and the resume form on the start page sets the cookie again in another browser. Without the cookie every assessment page is a 404. There are no user accounts.
+
+## Retaking and progress
+
+The overview has a "Retake the assessment" link. The retake page shows the profile flags as they are now, ticked, so the organisation can change anything that has changed (it started taking card payments, staff now work from home), and by default it copies the answers and evidence. The new version opens with a notice to go through each section and change what's different. Questions the new profile adds are left blank. Follow-ups stay closed until their parent answer goes up.
+
+The earlier version is never touched. It keeps its own profile and answers, and the overview lists every version. The progress page and the Progress sheet in the workbook compare a version with the one it was retaken from. They show the share of the target reached per function, every subcategory that improved or went backwards, which of the old plan's actions are done or have moved forward, and the answers that changed. With `previous` given, the Word report gets a "Progress since version N" section.
+
+![Retake form](web-retake.png)
+
+![Progress page for the food bank's second assessment](web-progress.png)
 
 ## Heat map
 
@@ -47,6 +59,10 @@ The box colour runs from red (0% reached) through amber (50%) to green (100%), a
 4. Top actions: rank, CSF ID, NIST's implementation example, cost band, risk now and risk reduced. `--top N` changes how many (default 10).
 5. Not applicable: excluded subcategories grouped by the reason.
 6. About this assessment: it is a self-assessment, nothing was scanned, it is not a certification, and how many answers came with evidence.
+
+For a retake, a "Progress since ..." section follows the executive summary. It has the comparison in sentences, a table of target reached per function before and now, the actions completed and the subcategories that went backwards. A sample is in [samples/food_bank_v2.docx](samples/food_bank_v2.docx).
+
+![First two pages of the food bank's second report](report-progress.png)
 
 `report` exits 1 for an incomplete answers file unless `--allow-incomplete` is given, like `export`.
 

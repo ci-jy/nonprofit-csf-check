@@ -48,6 +48,7 @@ def test_food_bank_retake(engine):
     assert (t["improved"], t["regressed"]) == (18, 3)
     assert (t["actions_before"], t["actions_completed"], t["actions_progressed"], t["actions_new"]) == (85, 4, 14, 1)
     assert (t["at_target_before"], t["at_target_after"]) == (19, 22)
+    assert t["actions_after"] == 82
     assert (round(100 * t["attainment_before"]), round(100 * t["attainment_after"])) == (27, 34)
     assert c.profile_changes == {"remote_staff": (False, True)}
     respond = next(f for f in c.functions if f.id == "RS")
