@@ -33,21 +33,21 @@ wrote out/food_bank_v2.xlsx
 
 With Docker instead, `docker compose up --build --detach --wait` starts PostgreSQL and the app, and `docker compose down -v` removes them. If you only want to look, [docs/samples/](docs/samples/) has a finished workbook and Word report.
 
-Commands and flags: [docs/cli.md](docs/cli.md)
-Web pages, heat map and Word report: [docs/web.md](docs/web.md)
-JSON API: [docs/api.md](docs/api.md)
-Docker Compose stack: [docs/docker.md](docs/docker.md)
-Scoring and risk model: [docs/scoring.md](docs/scoring.md)
-Question bank and profile flags: [docs/question-bank.md](docs/question-bank.md)
-Workbook sheets: [docs/workbook.md](docs/workbook.md)
-Retakes and the food bank comparison: [docs/retakes.md](docs/retakes.md)
-Data sources and licences: [docs/data-sources.md](docs/data-sources.md)
+- Commands and flags: [docs/cli.md](docs/cli.md)
+- Web pages, heat map and Word report: [docs/web.md](docs/web.md)
+- JSON API: [docs/api.md](docs/api.md)
+- Docker Compose stack: [docs/docker.md](docs/docker.md)
+- Scoring and risk model: [docs/scoring.md](docs/scoring.md)
+- Question bank and profile flags: [docs/question-bank.md](docs/question-bank.md)
+- Workbook sheets: [docs/workbook.md](docs/workbook.md)
+- Retakes and the food bank comparison: [docs/retakes.md](docs/retakes.md)
+- Data sources and licences: [docs/data-sources.md](docs/data-sources.md)
 
 ## How it works
 
 The CSF core is NIST's own JSON export from their Cybersecurity and Privacy Reference Tool, stored with its SHA-256, and the loader refuses a file that doesn't match. One surprise: the export still carries the withdrawn CSF 1.1 subcategories. They have to be filtered out to get the 106 that are actually in CSF 2.0.
 
-The 100 questions live in one YAML file, each mapped to one or more subcategories and answered on a 0 to 3 scale. The profile flags decide which questions apply, so a student club with no premises is never asked about door codes. Follow-ups only open when the parent answer is good enough. If you have no backups, you aren't asked whether you test them.
+The 100 questions live in one YAML file. Each is mapped to one or more subcategories and answered on a 0 to 3 scale. The profile flags decide which questions apply, so a student club with no premises is never asked about door codes. Follow-ups only open when the parent answer is good enough. If you have no backups, you aren't asked whether you test them.
 
 Making sure nothing fell through the gaps was the fiddly part. At startup the bank is checked against all 1,024 combinations of flags, and every subcategory has to be either asked about or excluded with a reason. A typo in a flag name stops the app before it serves anything.
 
@@ -57,7 +57,7 @@ A retake is a new version with its own profile and answers, opened by the same r
 
 ## Known issues and next steps
 
-- The inherent likelihood and impact numbers are my own coarse judgements for a small charity, not data. They sit in one file so they're easy to argue with.
+- The inherent likelihood and impact numbers are my own rough judgements for a small charity, not data. They sit in one file so they're easy to argue with.
 - The action plan is long, one action per gap (85 for the food bank). Grouping related actions into a single task would make it much easier to read.
 - When the profile changes, newly asked questions get averaged into subcategories that were already scored. The food bank started letting someone work from home, two home-device questions came in low, and PR.DS-01 shows as a regression even though nothing in the office got worse.
 - The resume code is the only access control and it opens every version. Lose it and you lose the history.
